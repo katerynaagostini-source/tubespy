@@ -6,6 +6,7 @@
 <title>TubeSpy — YouTube Niche Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -2179,26 +2180,35 @@ function renderPricing() {
   `;
 }
 
-let selectedPlan = '';
+// ── Stripe Payment Integration ──────────────────────────────────────────────
+const STRIPE_PRICES = {
+  lite: 'price_1TUuUHFe17orRPzZYqaJAVsb',
+  pro: 'price_1TUuUuFe17orRPzZT7AIszbH',
+  agency: 'price_1TUuVUFe17orRPzZtse7A4mg'
+};
+const STRIPE_PK = 'pk_live_51TKI1wFe17orRPzZ9AhHLzyUm66cE0rvRwCC6eMVjMvBAaQIAUd0mg5lswmfZhg4AvClXGQVLMEn0IdD6PbEL7rg00cdMxzGNg';
+
 function selectPlan(id) {
   if (id === 'free') return;
-  selectedPlan = id;
-  const names = { lite: 'Lite — $19/mo', pro: 'Pro — $49/mo', agency: 'Agency — $149/mo' };
-  document.getElementById('modal-title').textContent = 'Upgrade to ' + names[id];
-  document.getElementById('modal-desc').textContent = id === 'agency'
-    ? 'Leave your email and our team will contact you within 24h.'
-    : 'Enter your email to start your 7-day free trial. No credit card required.';
-  const m = document.getElementById('plan-modal');
-  m.style.display = 'flex';
+  const priceId = STRIPE_PRICES[id];
+  if (!priceId || priceId.includes('REPLACE')) {
+    alert('Payment setup in progress. Please try again shortly.');
+    return;
+  }
+  const stripe = Stripe(STRIPE_PK);
+  stripe.redirectToCheckout({
+    lineItems: [{ price: priceId, quantity: 1 }],
+    mode: 'subscription',
+    successUrl: window.location.origin + window.location.pathname + '?payment=success',
+    cancelUrl: window.location.origin + window.location.pathname + '?payment=cancelled'
+  }).then(function(result) {
+    if (result.error) {
+      alert(result.error.message);
+    }
+  });
 }
 function closePlanModal() {
   document.getElementById('plan-modal').style.display = 'none';
-}
-function submitPlan() {
-  const email = document.getElementById('modal-email').value.trim();
-  if (!email || !email.includes('@')) { alert('Enter a valid email'); return; }
-  closePlanModal();
-  alert(`✅ Thanks! We'll contact you at ${email} to activate your ${selectedPlan} plan.`);
 }
 
 // ── FAQ ──────────────────────────────────────────────────────────────────────

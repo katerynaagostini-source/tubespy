@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TubeSpy — YouTube Niche Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#4F46E5;--blue-light:#EEF2FF;--blue-dark:#3730A3;
+  --green:#10B981;--green-light:#D1FAE5;
+  --dark:#0F172A;--dark2:#1E293B;--gray:#64748B;--gray2:#94A3B8;
+  --light:#F8FAFC;--border:#E2E8F0;--border2:#CBD5E1;
+  --orange:#F59E0B;--red:#EF4444;--red-light:#FEE2E2;
+  --sidebar:260px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 25px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
+  --radius:12px;--radius-lg:16px;--radius-xl:20px;
+}
+html{font-size:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--light);color:var(--dark);display:flex;min-height:100vh;font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ── ANIMATED BACKGROUND ── */
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(79,70,229,.06) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(16,185,129,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+/* ── SIDEBAR ── */
+#sb{width:var(--sidebar);min-height:100vh;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100;box-shadow:var(--shadow)}
+.logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#EF4444,#DC2626);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(239,68,68,.35)}
+.logo-text{font-size:18px;font-weight:900;color:var(--dark);letter-spacing:-0.5px}
+.logo-check{color:#EF4444}
+.plan-tag{font-size:10px;font-weight:700;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;padding:3px 8px;border-radius:99px;margin-left:auto;box-shadow:0 2px 8px rgba(79,70,229,.3)}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.sb-back{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:var(--gray);cursor:pointer;border-radius:8px;margin:0 8px;transition:all .15s}
+.sb-back:hover{background:var(--light);color:var(--dark)}
+.sb-section{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--gray2);padding:14px 18px 6px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border-radius:8px;transition:all .15s;position:relative}
+.sb-item:hover{background:var(--blue-light);color:var(--blue-dark)}
+.sb-item.active{background:linear-gradient(135deg,var(--blue-light),#E0E7FF);color:var(--blue);font-weight:600;box-shadow:var(--shadow-sm)}
+.sb-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--blue);border-radius:0 3px 3px 0}
+.sb-badge{font-size:9px;font-weight:800;background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:2px 6px;border-radius:99px;margin-left:auto;text-transform:uppercase;letter-spacing:.04em}
+.sb-foot{border-top:1px solid var(--border);padding:12px 8px}
+.help-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--gray);width:100%;transition:background .15s}
+.help-btn:hover{background:var(--light)}
+.help-drop{display:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:4px;margin-top:4px;box-shadow:var(--shadow-lg)}
+.help-drop.open{display:block}
+.help-link{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;color:var(--gray);border-radius:6px;cursor:pointer;transition:all .15s}
+.help-link:hover{background:var(--light);color:var(--dark)}
+
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 0 var(--border)}
+.bread{font-size:13px;color:var(--gray);display:flex;align-items:center;gap:6px}
+.bread b{color:var(--dark);font-weight:600}
+.bread-sep{color:var(--border2)}
+.topbar-r{display:flex;align-items:center;gap:10px}
+.topbar-stat{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--gray);display:flex;align-items:center;gap:6px}
+.topbar-stat .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.discord-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#5865F2;color:#fff;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:all .15s;box-shadow:0 2px 8px rgba(88,101,242,.3)}
+.discord-btn:hover{background:#4752C4;transform:translateY(-1px)}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7C3AED);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(79,70,229,.3);transition:transform .15s}
+.avatar:hover{transform:scale(1.05)}
+.content{flex:1;padding:28px 32px}
+
+/* ── API KEY BANNER ── */
+.api-banner{background:linear-gradient(135deg,#1E293B,var(--blue));color:#fff;border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow-lg);position:relative;overflow:visible;z-index:2}
+.api-banner::after{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none}
+.api-banner input{flex:1;min-width:240px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:9px 14px;font-size:13px;outline:none;font-family:monospace;transition:border .2s}
+.api-banner input::placeholder{color:rgba(255,255,255,.5)}
+.api-banner input:focus{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.18)}
+.btn-save-key{background:#fff;color:var(--blue);border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .15s;box-shadow:var(--shadow);position:relative;z-index:51}
+.btn-save-key:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.api-ok{background:var(--green-light);color:#065F46;border:1px solid #A7F3D0;border-radius:var(--radius);padding:10px 16px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:8px;font-weight:500}
+
+/* ── SEARCH BAR ── */
+.search-row{display:flex;gap:10px;margin-bottom:18px;align-items:center}
+.search-sel{border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:13px;background:#fff;cursor:pointer;min-width:110px;color:var(--dark);font-weight:500;transition:border .2s}
+.search-sel:focus{border-color:var(--blue);outline:none}
+.search-wrap{flex:1;position:relative}
+.search-wrap input{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 14px 10px 40px;font-size:13px;background:#fff;outline:none;transition:all .2s;box-shadow:var(--shadow-sm);font-family:inherit}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.search-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gray2);font-size:15px;pointer-events:none}
+.btn-search{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:all .2s;box-shadow:0 2px 8px rgba(79,70,229,.3);font-family:inherit}
+.btn-search:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.4)}
+.btn-search:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── FILTER TABS ── */
+.ftabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;background:#fff;color:var(--gray);white-space:nowrap;transition:all .15s}
+.ftab:hover{border-color:var(--blue);color:var(--blue)}
+.ftab.active{background:var(--dark);color:#fff;border-color:var(--dark);box-shadow:var(--shadow-sm)}
+
+/* ── SORT BAR ── */
+.sort-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:center;padding:10px 14px;background:#fff;border-radius:8px;border:1px solid var(--border)}
+.sort-btn{font-size:12px;font-weight:500;color:var(--gray);cursor:pointer;background:none;border:none;display:flex;align-items:center;gap:4px;padding:2px 0;transition:color .15s;font-family:inherit}
+.sort-btn:hover{color:var(--dark)}
+.sort-btn.active{color:var(--blue);font-weight:600}
+
+/* ── CHANNEL CARD ── */
+.ch-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:12px;transition:all .2s;box-shadow:var(--shadow-sm)}
+.ch-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px);border-color:var(--border2)}
+.ch-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.ch-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;flex-shrink:0;overflow:hidden;box-shadow:var(--shadow)}
+.ch-av img{width:100%;height:100%;object-fit:cover}
+.ch-name{font-size:15px;font-weight:700}
+.ch-subs{font-size:12px;color:var(--gray);margin-top:2px}
+.ch-actions{margin-left:auto;display:flex;gap:6px}
+.ico-btn{background:none;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all .15s;color:var(--gray)}
+.ico-btn:hover{background:var(--blue-light);border-color:var(--blue);color:var(--blue)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.met{background:linear-gradient(135deg,var(--light),#fff);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:all .2s}
+.met:hover{border-color:var(--blue);background:var(--blue-light)}
+.met-lbl{font-size:11px;color:var(--gray);margin-bottom:5px;font-weight:500;display:flex;align-items:center;gap:4px}
+.met-val{font-size:18px;font-weight:800;color:var(--dark)}
+.outlier-wrap{display:flex;align-items:center;gap:8px}
+.o-bars{display:flex;gap:3px}
+.o-bar{height:7px;width:20px;border-radius:4px;background:var(--border);transition:all .3s}
+.o-bar.red{background:linear-gradient(135deg,#EF4444,#DC2626)}
+.o-bar.orange{background:linear-gradient(135deg,#F59E0B,#D97706)}
+.o-bar.green{background:linear-gradient(135deg,#10B981,#059669)}
+.o-num{font-size:17px;font-weight:800}
+.ai-tag{background:linear-gradient(135deg,var(--blue-light),#E0E7FF);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;border:1px solid rgba(79,70,229,.2)}
+
+/* ── VIDEOS EXPAND ── */
+.ch-vids{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:none}
+.ch-vids.open{display:block}
+.vids-lbl{font-size:12px;font-weight:600;color:var(--gray);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.vids-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.vid-item{cursor:pointer;border-radius:8px;overflow:hidden;border:1px solid var(--border);transition:all .2s;background:#fff}
+.vid-item:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.vid-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#e5e7eb}
+.vid-title{font-size:11px;color:var(--dark);padding:6px 8px 2px;line-height:1.35;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vid-views{font-size:10px;color:var(--gray2);padding:0 8px 6px}
+
+/* ── KEYWORD CARD ── */
+.kw-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:12px;box-shadow:var(--shadow-sm);transition:all .2s}
+.kw-card:hover{box-shadow:var(--shadow);border-color:var(--border2)}
+.kw-title{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.kw-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+/* ── CHANNEL TRACKER ── */
+.tracker-input-row{display:flex;gap:10px;margin-bottom:18px}
+.tracker-input{flex:1;border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;outline:none;font-family:inherit;transition:border .2s;box-shadow:var(--shadow-sm)}
+.tracker-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.tracked-list{display:flex;flex-direction:column;gap:10px}
+.tracked-item{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;box-shadow:var(--shadow-sm);transition:all .2s}
+.tracked-item:hover{box-shadow:var(--shadow);border-color:var(--border2)}
+.tracked-head{display:flex;align-items:center;gap:12px}
+.tracked-del{background:none;border:none;cursor:pointer;color:var(--gray2);font-size:18px;margin-left:auto;transition:color .15s;padding:4px 8px;border-radius:6px}
+.tracked-del:hover{color:var(--red);background:var(--red-light)}
+.tracked-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.tstat{background:var(--light);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.tstat-lbl{font-size:11px;color:var(--gray);margin-bottom:4px;font-weight:500}
+.tstat-val{font-size:17px;font-weight:800}
+
+/* ── CHANNEL DETAIL PANEL ── */
+.ch-detail{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);margin-top:14px;overflow:hidden;animation:slideDown .3s ease}
+@keyframes slideDown{from{opacity:0;max-height:0;transform:translateY(-8px)}to{opacity:1;max-height:3000px;transform:translateY(0)}}
+.ch-detail-header{background:linear-gradient(135deg,var(--dark),var(--dark2));padding:24px 28px;display:flex;gap:18px;align-items:flex-start}
+.ch-detail-avatar{width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,255,255,.2);object-fit:cover;flex-shrink:0}
+.ch-detail-info{flex:1;color:#fff}
+.ch-detail-info h3{font-size:20px;font-weight:800;margin-bottom:4px}
+.ch-detail-info .ch-desc{font-size:12px;color:var(--gray2);margin-top:6px;line-height:1.5}
+.ch-detail-info .ch-meta{font-size:12px;color:var(--gray2);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap}
+.ch-detail-info .ch-meta span{display:flex;align-items:center;gap:4px}
+.ch-detail-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:18px 28px;border-bottom:1px solid var(--border)}
+.ch-detail-stat{text-align:center;padding:12px 8px;background:var(--light);border-radius:10px}
+.ch-detail-stat .val{font-size:18px;font-weight:800;color:var(--dark)}
+.ch-detail-stat .lbl{font-size:11px;color:var(--gray);margin-top:4px;font-weight:500}
+.ch-detail-section{padding:20px 28px;border-bottom:1px solid var(--border)}
+.ch-detail-section h4{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.vid-card{background:var(--light);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all .2s;cursor:pointer;text-decoration:none;color:inherit}
+.vid-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:var(--border2)}
+.vid-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.vid-card .vid-info{padding:10px 12px}
+.vid-card .vid-title{font-size:12px;font-weight:600;color:var(--dark);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vid-card .vid-views{font-size:11px;color:var(--gray);margin-top:5px;font-weight:500}
+.rev-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding:14px 0}
+.rev-bar{flex:1;background:linear-gradient(180deg,var(--blue),var(--blue-dark));border-radius:6px 6px 0 0;position:relative;min-height:4px;transition:height .4s ease}
+.rev-bar:hover{opacity:.85}
+.rev-bar .rev-val{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--dark);white-space:nowrap}
+.rev-bar .rev-month{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--gray);white-space:nowrap}
+.ch-detail-close{position:absolute;top:12px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.ch-detail-close:hover{background:rgba(255,255,255,.3)}
+.growth-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.growth-up{background:var(--green-light);color:#065F46}
+.growth-neutral{background:var(--blue-light);color:var(--blue)}
+@media(max-width:640px){
+  .ch-detail-stats{grid-template-columns:repeat(3,1fr)}
+  .vid-grid{grid-template-columns:repeat(2,1fr)}
+  .ch-detail-header{flex-direction:column;align-items:center;text-align:center}
+  .tracked-stats{grid-template-columns:repeat(3,1fr)!important}
+  .rev-chart{height:100px}
+  .rev-bar .rev-val{font-size:8px}
+}
+
+/* ── RPM ── */
+.rpm-table{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px;box-shadow:var(--shadow-sm)}
+.rpm-table table{width:100%;border-collapse:collapse}
+.rpm-table th{background:var(--light);padding:12px 18px;text-align:left;font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.04em}
+.rpm-table td{padding:12px 18px;border-top:1px solid var(--border);font-size:13px;font-weight:500}
+.rpm-table tr:hover td{background:#FAFBFF}
+.rpm-high{color:var(--green);font-weight:700}
+.rpm-mid{color:var(--orange);font-weight:700}
+.rpm-low{color:var(--red);font-weight:700}
+.rpm-calc{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm)}
+.rpm-calc h3{font-size:15px;font-weight:700;margin-bottom:16px}
+.calc-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.calc-field{flex:1;min-width:160px}
+.calc-field label{display:block;font-size:11px;color:var(--gray);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.calc-field input,.calc-field select{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:13px;outline:none;font-family:inherit;transition:border .2s}
+.calc-field input:focus,.calc-field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.rpm-result{background:linear-gradient(135deg,var(--blue-light),#E0E7FF);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(79,70,229,.15)}
+.rpm-result-val{font-size:32px;font-weight:900;color:var(--blue)}
+.rpm-result-lbl{font-size:12px;color:var(--gray);margin-top:6px}
+
+/* ── THUMBNAIL SEARCH ── */
+.thumb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.thumb-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm)}
+.thumb-card:hover{box-shadow:var(--shadow-xl);transform:translateY(-3px);border-color:var(--border2)}
+.thumb-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.thumb-info{padding:12px 14px}
+.thumb-title{font-size:13px;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px;color:var(--dark)}
+.thumb-meta{font-size:11px;color:var(--gray);display:flex;gap:10px}
+
+/* ── DASHBOARD ── */
+.welcome-h{font-size:22px;font-weight:800;margin-bottom:4px;background:linear-gradient(135deg,var(--dark),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome-sub{font-size:13px;color:var(--gray);margin-bottom:24px;display:flex;align-items:center;gap:8px}
+.dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:22px}
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:all .25s;box-shadow:var(--shadow-sm)}
+.dash-card:hover{box-shadow:var(--shadow-xl);transform:translateY(-3px);border-color:var(--border2)}
+.dash-preview{height:200px;display:flex;align-items:center;justify-content:center;font-size:60px;position:relative;overflow:hidden}
+.dash-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(to bottom,transparent,rgba(0,0,0,.05))}
+.dash-body{padding:18px 20px}
+.dash-body h3{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--dark)}
+.dash-body p{font-size:13px;color:var(--gray);margin-bottom:14px;line-height:1.55}
+.dash-features li{font-size:13px;color:var(--dark2);display:flex;gap:8px;margin-bottom:7px;line-height:1.45}
+
+/* ── STATS TICKER ── */
+.stats-ticker{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);transition:all .2s;position:relative;overflow:hidden}
+.stat-box:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.stat-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-color,var(--blue));border-radius:var(--radius) var(--radius) 0 0}
+.stat-box-val{font-size:24px;font-weight:900;margin-bottom:2px}
+.stat-box-lbl{font-size:11px;color:var(--gray);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.stat-box-delta{font-size:11px;font-weight:600;margin-top:4px;display:flex;align-items:center;gap:3px}
+.stat-box-delta.up{color:var(--green)}
+.stat-box-delta.down{color:var(--red)}
+
+/* ── OVERVIEW ── */
+.ov-section{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.ov-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ov-title{font-size:15px;font-weight:700}
+.ov-sub{font-size:12px;color:var(--gray);margin-top:2px;display:flex;align-items:center;gap:4px}
+.view-all{font-size:12px;color:var(--blue);font-weight:600;cursor:pointer;transition:color .15s}
+.view-all:hover{color:var(--blue-dark)}
+.ov-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+.ov-row:last-child{border-bottom:none}
+.ov-row:hover{background:var(--light);margin:0 -22px;padding:10px 22px;border-radius:8px}
+.ov-av{width:40px;height:40px;border-radius:50%;background:var(--light);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;box-shadow:var(--shadow-sm)}
+.ov-av img{width:100%;height:100%;object-fit:cover}
+.ov-name{font-size:14px;font-weight:600;color:var(--dark)}
+.ov-subs{font-size:11px;color:var(--gray);margin-top:1px}
+.ov-score{margin-left:auto;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+
+/* ── N8N ── */
+.wf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.wf-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm)}
+.wf-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:var(--blue)}
+.wf-icon{font-size:26px;margin-bottom:10px}
+.wf-name{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--dark)}
+.wf-desc{font-size:12px;color:var(--gray);line-height:1.5;margin-bottom:12px}
+.btn-dl{font-size:12px;color:var(--blue);background:var(--blue-light);border:1px solid rgba(79,70,229,.2);padding:5px 12px;border-radius:99px;cursor:pointer;font-weight:600;transition:all .15s}
+.btn-dl:hover{background:var(--blue);color:#fff}
+
+/* ── MCP ── */
+.mcp-hero{background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:var(--radius-xl);padding:28px;color:#fff;margin-bottom:18px;box-shadow:var(--shadow-xl);position:relative;overflow:hidden}
+.mcp-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:rgba(79,70,229,.2);border-radius:50%;filter:blur(40px)}
+.mcp-code{background:rgba(0,0,0,.4);color:#22D3EE;border-radius:10px;padding:16px 20px;font-family:'Fira Code',monospace;font-size:12px;margin-top:14px;border:1px solid rgba(255,255,255,.1);white-space:pre;overflow-x:auto;line-height:1.6}
+.mcp-tools{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.mcp-tool{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all .2s;box-shadow:var(--shadow-sm)}
+.mcp-tool:hover{box-shadow:var(--shadow);border-color:var(--blue)}
+.mcp-tool h4{font-size:12px;font-weight:700;margin-bottom:5px;color:var(--blue);font-family:'Fira Code',monospace}
+.mcp-tool p{font-size:12px;color:var(--gray);line-height:1.5}
+
+/* ── ACCOUNT ── */
+.acct-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:22px}
+.acct-tab{padding:10px 22px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--gray);margin-bottom:-2px;transition:all .15s}
+.acct-tab:hover{color:var(--dark)}
+.acct-tab.active{border-bottom-color:var(--blue);color:var(--blue);font-weight:700}
+.profile-box{background:linear-gradient(135deg,#fff,var(--blue-light));border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.p-av{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7C3AED);color:#fff;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 24px rgba(79,70,229,.35);overflow:hidden}
+.p-av img{width:100%;height:100%;object-fit:cover}
+.p-name{font-size:17px;font-weight:800;color:var(--dark)}
+.p-since{font-size:12px;color:var(--gray);margin-top:4px}
+.detail-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.detail-box h3{font-size:14px;font-weight:700;margin-bottom:18px;color:var(--dark);display:flex;align-items:center;gap:8px}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.d-field label{font-size:11px;color:var(--gray);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.d-val{font-size:14px;font-weight:500;border-bottom:1px solid var(--border);padding-bottom:8px;color:var(--dark)}
+.free-badge{background:linear-gradient(135deg,#FEE2E2,#FECACA);color:#991B1B;font-size:11px;font-weight:700;padding:4px 12px;border-radius:99px;display:inline-block;border:1px solid #FCA5A5}
+
+/* ── STATES ── */
+.loading{display:flex;align-items:center;gap:12px;padding:32px;color:var(--gray);font-size:13px;font-weight:500}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:56px 24px;color:var(--gray)}
+.empty h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--dark)}
+.empty p{font-size:13px;line-height:1.6}
+.error-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--radius);padding:14px 18px;font-size:13px;color:#991B1B;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+
+/* ── UTILITY ── */
+.tag-green{background:var(--green-light);color:#065F46;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;border:1px solid #A7F3D0}
+.tag-blue{background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;border:1px solid rgba(79,70,229,.2)}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(79,70,229,.3);font-family:inherit}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(79,70,229,.4)}
+
+/* ── FAQ ── */
+.faq-item{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow-sm);transition:all .2s}
+.faq-item:hover{box-shadow:var(--shadow);border-color:var(--border2)}
+.faq-q{padding:16px 20px;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--dark);transition:background .15s}
+.faq-q:hover{background:var(--light)}
+.faq-a{display:none;padding:0 20px 16px;font-size:13px;color:var(--gray);line-height:1.7}
+.faq-a.open{display:block}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--gray2)}
+
+/* ── TRANSITIONS ── */
+.content > *{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SIDEBAR */
+#sb{width:var(--sidebar);min-height:100vh;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100}
+.logo{padding:18px 20px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.logo-text{font-size:22px;font-weight:900;color:#0f0f0f;letter-spacing:-1px}
+.logo-check{color:#EF4444}
+.plan-tag{font-size:11px;font-weight:700;background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:99px;margin-left:4px}
+.sb-nav{flex:1;padding:8px 0;overflow-y:auto}
+.sb-back{display:flex;align-items:center;gap:8px;padding:10px 20px;font-size:14px;color:var(--gray);cursor:pointer}
+.sb-back:hover{color:var(--dark)}
+.sb-section{font-size:11px;font-weight:700;letter-spacing:.08em;color:#9CA3AF;padding:12px 20px 6px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:15px;color:#374151;cursor:pointer;transition:all .15s}
+.sb-item:hover{background:var(--light);color:var(--dark)}
+.sb-item.active{background:var(--blue-light);color:var(--blue);font-weight:600}
+.sb-badge{font-size:10px;font-weight:700;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:99px;margin-left:auto}
+.sb-foot{border-top:1px solid var(--border);padding:10px}
+.help-btn{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;color:var(--gray);width:100%}
+.help-btn:hover{background:var(--light)}
+.help-drop{display:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:4px;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.help-drop.open{display:block}
+.help-link{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;color:var(--gray);border-radius:6px;cursor:pointer}
+.help-link:hover{background:var(--light);color:var(--dark)}
+
+/* MAIN */
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.bread{font-size:14px;color:var(--gray)}
+.bread b{color:var(--dark)}
+.topbar-r{display:flex;align-items:center;gap:12px}
+.discord-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;background:#5865F2;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;text-decoration:none}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.content{flex:1;padding:24px 28px}
+
+/* API KEY BANNER */
+.api-banner{background:linear-gradient(135deg,#1e3a8a,var(--blue));color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:relative;overflow:visible;z-index:2}
+.api-banner input{flex:1;min-width:240px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;outline:none}
+.api-banner input::placeholder{color:rgba(255,255,255,.6)}
+.api-banner input:focus{border-color:#fff}
+.btn-save-key{background:#fff;color:var(--blue);border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;position:relative;z-index:51;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.btn-save-key:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.btn-save-key:active{transform:translateY(0);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.api-ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:12px;padding:10px 16px;font-size:13px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+
+/* SEARCH BAR */
+.search-row{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+.search-sel{border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:14px;background:#fff;cursor:pointer;min-width:110px}
+.search-wrap{flex:1;position:relative}
+.search-wrap input{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 14px 9px 38px;font-size:14px;background:#fff;outline:none}
+.search-wrap input:focus{border-color:var(--blue)}
+.search-wrap .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9CA3AF;font-size:14px}
+.btn-search{background:var(--blue);color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-search:hover{background:#2d3fd0}
+.btn-search:disabled{opacity:.5;cursor:not-allowed}
+
+/* FILTER TABS */
+.ftabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:99px;border:1px solid var(--border);font-size:13px;cursor:pointer;background:#fff;color:var(--gray);white-space:nowrap;transition:all .15s}
+.ftab.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+/* SORT BAR */
+.sort-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.sort-btn{font-size:13px;color:var(--gray);cursor:pointer;background:none;border:none;display:flex;align-items:center;gap:4px}
+.sort-btn:hover{color:var(--dark)}
+.sort-btn.active{color:var(--dark);font-weight:600}
+
+/* CHANNEL CARD */
+.ch-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.ch-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.ch-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;flex-shrink:0;overflow:hidden}
+.ch-av img{width:100%;height:100%;object-fit:cover}
+.ch-name{font-size:15px;font-weight:700}
+.ch-subs{font-size:13px;color:var(--gray)}
+.ch-actions{margin-left:auto;display:flex;gap:6px}
+.ico-btn{background:none;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.ico-btn:hover{background:var(--light)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.met{background:var(--light);border-radius:8px;padding:10px 12px}
+.met-lbl{font-size:12px;color:var(--gray);margin-bottom:4px}
+.met-val{font-size:17px;font-weight:700}
+.outlier-wrap{display:flex;align-items:center;gap:8px}
+.o-bars{display:flex;gap:3px}
+.o-bar{height:7px;width:22px;border-radius:3px;background:#E5E7EB}
+.o-bar.red{background:var(--red)}
+.o-bar.orange{background:var(--orange)}
+.o-bar.green{background:var(--green)}
+.o-num{font-size:16px;font-weight:700}
+.ai-tag{background:var(--blue-light);color:var(--blue);font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px}
+
+/* VIDEOS EXPAND */
+.ch-vids{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;display:none}
+.ch-vids.open{display:block}
+.vids-lbl{font-size:13px;font-weight:600;color:var(--gray);margin-bottom:8px}
+.vids-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.vid-item{cursor:pointer}
+.vid-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:#e5e7eb;display:block}
+.vid-title{font-size:12px;color:var(--gray);margin-top:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vid-views{font-size:11px;color:#9CA3AF;margin-top:2px}
+
+/* KEYWORD CARD */
+.kw-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.kw-title{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.kw-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+
+/* CHANNEL TRACKER */
+.tracker-input-row{display:flex;gap:10px;margin-bottom:16px}
+.tracker-input{flex:1;border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-size:14px;outline:none}
+.tracker-input:focus{border-color:var(--blue)}
+.tracked-list{display:flex;flex-direction:column;gap:10px}
+.tracked-item{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.tracked-head{display:flex;align-items:center;gap:12px}
+.tracked-del{background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:18px;margin-left:auto}
+.tracked-del:hover{color:var(--red)}
+.tracked-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.tstat{background:var(--light);border-radius:8px;padding:10px 12px}
+.tstat-lbl{font-size:12px;color:var(--gray);margin-bottom:4px}
+.tstat-val{font-size:16px;font-weight:700}
+
+/* RPM TABLE */
+.rpm-table{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.rpm-table table{width:100%;border-collapse:collapse}
+.rpm-table th{background:var(--light);padding:12px 16px;text-align:left;font-size:13px;font-weight:600;color:var(--gray)}
+.rpm-table td{padding:12px 16px;border-top:1px solid var(--border);font-size:14px}
+.rpm-table tr:hover td{background:#fafafa}
+.rpm-high{color:var(--green);font-weight:700}
+.rpm-mid{color:var(--orange);font-weight:700}
+.rpm-low{color:var(--red);font-weight:700}
+.rpm-calc{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px}
+.rpm-calc h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.calc-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.calc-field{flex:1;min-width:160px}
+.calc-field label{display:block;font-size:12px;color:var(--gray);margin-bottom:6px;font-weight:600}
+.calc-field input,.calc-field select{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;outline:none}
+.calc-field input:focus,.calc-field select:focus{border-color:var(--blue)}
+.rpm-result{background:var(--blue-light);border-radius:10px;padding:16px;text-align:center}
+.rpm-result-val{font-size:28px;font-weight:800;color:var(--blue)}
+.rpm-result-lbl{font-size:13px;color:var(--gray);margin-top:4px}
+
+/* THUMBNAIL SEARCH */
+.thumb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.thumb-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .2s}
+.thumb-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.thumb-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.thumb-info{padding:10px 12px}
+.thumb-title{font-size:13px;font-weight:600;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.thumb-meta{font-size:12px;color:var(--gray);display:flex;gap:10px}
+
+/* OUTLIERS (same as AI Recs) */
+/* DASHBOARD */
+.welcome-h{font-size:20px;font-weight:800;margin-bottom:4px}
+.welcome-sub{font-size:14px;color:var(--gray);margin-bottom:20px}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .2s}
+.dash-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px)}
+.dash-preview{height:180px;display:flex;align-items:center;justify-content:center;font-size:60px}
+.dash-body{padding:16px}
+.dash-body h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.dash-body p{font-size:13px;color:var(--gray);margin-bottom:12px;line-height:1.5}
+.dash-features li{font-size:13px;color:#374151;display:flex;gap:6px;margin-bottom:6px;line-height:1.4}
+.dash-features li::before{content:'✓';color:var(--blue);font-weight:700;flex-shrink:0}
+
+/* OVERVIEW SECTIONS */
+.ov-section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:14px}
+.ov-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ov-title{font-size:15px;font-weight:700}
+.ov-sub{font-size:13px;color:var(--gray)}
+.view-all{font-size:13px;color:var(--blue);font-weight:600;cursor:pointer}
+.ov-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.ov-row:last-child{border-bottom:none}
+.ov-av{width:38px;height:38px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.ov-av img{width:100%;height:100%;object-fit:cover}
+.ov-name{font-size:14px;font-weight:600}
+.ov-subs{font-size:12px;color:var(--gray)}
+.ov-score{margin-left:auto;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+/* COURSE */
+.course-hero{background:linear-gradient(135deg,#1e3a8a,#7c3aed);border-radius:12px;padding:24px;color:#fff;margin-bottom:16px}
+.mod-list{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mod-item{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.mod-item:last-child{border-bottom:none}
+.mod-item:hover{background:var(--light)}
+.mod-num{width:30px;height:30px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.mod-name{flex:1;font-size:14px}
+.mod-dur{font-size:12px;color:var(--gray)}
+
+/* N8N */
+.wf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.wf-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:box-shadow .2s}
+.wf-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.wf-icon{font-size:24px;margin-bottom:8px}
+.wf-name{font-size:14px;font-weight:700;margin-bottom:6px}
+.wf-desc{font-size:12px;color:var(--gray);line-height:1.4;margin-bottom:10px}
+.btn-dl{font-size:12px;color:var(--blue);background:var(--blue-light);border:none;padding:4px 10px;border-radius:99px;cursor:pointer;font-weight:600}
+
+/* MCP */
+.mcp-hero{background:linear-gradient(135deg,#0f172a,#1e3a8a);border-radius:12px;padding:24px;color:#fff;margin-bottom:16px}
+.mcp-code{background:#0f172a;color:#22d3ee;border-radius:10px;padding:14px 18px;font-family:monospace;font-size:13px;margin-top:12px;border:1px solid #1e3a8a;white-space:pre;overflow-x:auto}
+.mcp-tools{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.mcp-tool{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+.mcp-tool h4{font-size:13px;font-weight:700;margin-bottom:4px;color:var(--blue)}
+.mcp-tool p{font-size:12px;color:var(--gray)}
+
+/* ACCOUNT */
+.acct-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
+.acct-tab{padding:10px 20px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;color:var(--gray)}
+.acct-tab.active{border-bottom-color:var(--blue);color:var(--blue);font-weight:600}
+.profile-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:14px}
+.p-av{width:80px;height:80px;border-radius:50%;background:var(--blue);color:#fff;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden}
+.p-av img{width:100%;height:100%;object-fit:cover}
+.p-name{font-size:16px;font-weight:700}
+.p-since{font-size:13px;color:var(--gray)}
+.detail-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px}
+.detail-box h3{font-size:14px;font-weight:700;margin-bottom:16px}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.d-field label{font-size:12px;color:var(--gray);display:block;margin-bottom:4px}
+.d-val{font-size:14px;border-bottom:1px solid var(--border);padding-bottom:8px}
+.free-badge{background:#fee2e2;color:#991b1b;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;display:inline-block}
+
+/* CHROME EXT */
+.ext-hero{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;display:flex;gap:20px;align-items:center}
+.ext-features{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ext-feat{background:var(--light);border-radius:10px;padding:14px}
+.ext-feat h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.ext-feat p{font-size:12px;color:var(--gray)}
+
+/* STATES */
+.loading{display:flex;align-items:center;gap:10px;padding:24px;color:var(--gray);font-size:14px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:var(--gray);font-size:14px}
+.empty h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--dark)}
+.error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 18px;font-size:13px;color:#991b1b;margin-bottom:16px}
+
+/* UTILITY */
+.tag-green{background:#dcfce7;color:#166534;font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px}
+.tag-blue{background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px}
+.btn-primary{background:var(--blue);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:#2d3fd0}
+.section-label{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+
+/* FAQ */
+.faq-item{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.faq-q{padding:14px 18px;font-size:14px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.faq-q:hover{background:var(--light)}
+.faq-a{display:none;padding:0 18px 14px;font-size:13px;color:var(--gray);line-height:1.6}
+.faq-a.open{display:block}
+</style>
+</head>
+<body>
+
+<aside id="sb">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14l-4-4 1.41-1.41L11 13.17l6.59-6.59L19 8l-8 8z" fill="white" opacity=".3"/><path d="M10 16.5l-4.5-4.5 1.06-1.06L10 14.38l7.44-7.44 1.06 1.06z" fill="white"/></svg>
+    </div>
+    <div class="logo-text">Tube<span class="logo-check">Spy</span></div>
+    <span class="plan-tag" id="plan-tag">FREE</span>
+  </div>
+  <nav class="sb-nav" id="sb-nav"></nav>
+  <div class="sb-foot">
+    <div class="help-btn" onclick="toggleHelp()">
+      <span>❓</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px;color:var(--dark)">Need Help?</div>
+        <div style="font-size:12px;color:var(--gray)">Support & resources</div>
+      </div>
+      <span id="help-chev" style="color:var(--gray);font-size:11px">▲</span>
+    </div>
+    <div class="help-drop" id="help-drop">
+      <div class="help-link" onclick="window.open('mailto:contact@tubespy.io')">✉️ Contact Support</div>
+      <div class="help-link" onclick="go('faq')">❔ FAQ</div>
+      <div class="help-link" onclick="window.open('mailto:contact@tubespy.io?subject=Bug Report&body=Describe the bug here...')">🐛 Report Bug</div>
+    </div>
+  </div>
+</aside>
+
+<div id="main">
+  <div class="topbar">
+    <div class="bread" id="bread">Dashboard</div>
+    <div class="topbar-r">
+      <div class="topbar-stat"><span class="dot"></span> <span id="tb-channels">18,707,535</span> channels</div>
+      <div class="topbar-stat" style="cursor:pointer" onclick="go('account')" title="Add API key">🔑 <span id="tb-api-status">No API</span></div>
+      <a class="discord-btn" href="https://discord.gg" target="_blank">
+        <svg width="14" height="11" fill="white" viewBox="0 0 24 18"><path d="M20.3 1.5A19.8 19.8 0 0016.2.5a.07.07 0 00-.08.04 14 14 0 00-.5 1.04 18.3 18.3 0 00-5.49 0 10.8 10.8 0 00-.51-1.04.07.07 0 00-.08-.04A19.7 19.7 0 004.1 1.5a.07.07 0 00-.03.03C.53 6.1-.32 10.6.1 15a.08.08 0 00.03.05 20 20 0 006 3 .08.08 0 00.08-.03c.46-.63.87-1.3 1.23-2a.08.08 0 00-.04-.1 13.2 13.2 0 01-1.87-.9.08.08 0 010-.13c.13-.1.25-.2.37-.29a.07.07 0 01.08-.01c3.93 1.8 8.18 1.8 12.06 0a.07.07 0 01.08.01c.12.1.24.2.37.3a.08.08 0 010 .12 12.3 12.3 0 01-1.87.9.08.08 0 00-.04.1c.36.7.77 1.37 1.22 2a.08.08 0 00.09.03 19.8 19.8 0 006-3 .08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.46a.06.06 0 00-.03-.03z"/></svg>
+        Discord
+      </a>
+      <div class="avatar" onclick="go('account')" title="Account">K</div>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let PAGE = 'dashboard';
+let YT_KEY = localStorage.getItem('yt_api_key') || '';
+let trackedChannels = JSON.parse(localStorage.getItem('tracked_channels') || '[]');
+let acctTab = 'profile';
+let sortBy = 'outlier';
+let sortDir = -1;
+let allResults = [];
+let filterMode = 'all';
+
+// ── YOUTUBE API ────────────────────────────────────────────────────────────
+const YT = 'https://www.googleapis.com/youtube/v3';
+
+async function ytFetch(endpoint, params) {
+  if (!YT_KEY) throw new Error('No API key');
+  const url = new URL(YT + endpoint);
+  Object.entries({...params, key: YT_KEY}).forEach(([k,v]) => url.searchParams.set(k, v));
+  const r = await fetch(url);
+  if (!r.ok) {
+    const e = await r.json();
+    throw new Error(e?.error?.message || 'YouTube API error');
+  }
+  return r.json();
+}
+
+async function searchChannels(query, maxResults = 12) {
+  const search = await ytFetch('/search', {
+    part: 'snippet', type: 'channel', q: query,
+    maxResults, order: 'relevance'
+  });
+  const ids = search.items.map(i => i.snippet.channelId).join(',');
+  if (!ids) return [];
+  const stats = await ytFetch('/channels', {
+    part: 'statistics,snippet,contentDetails', id: ids
+  });
+  return stats.items.map(ch => buildChannelObj(ch));
+}
+
+async function getChannelById(id) {
+  const r = await ytFetch('/channels', {
+    part: 'statistics,snippet,brandingSettings', id
+  });
+  if (!r.items?.length) throw new Error('Channel not found');
+  return buildChannelObj(r.items[0]);
+}
+
+async function getChannelByUrl(input) {
+  // Handle @handle, channel URL, or channel ID
+  let id = input.trim();
+  if (id.includes('youtube.com/channel/')) {
+    id = id.split('youtube.com/channel/')[1].split('/')[0].split('?')[0];
+    return getChannelById(id);
+  }
+  if (id.includes('youtube.com/@') || id.startsWith('@')) {
+    const handle = id.includes('@') ? id.split('@').pop().split('/')[0].split('?')[0] : id;
+    const r = await ytFetch('/channels', { part: 'statistics,snippet,brandingSettings', forHandle: '@' + handle });
+    if (!r.items?.length) throw new Error('Channel not found');
+    return buildChannelObj(r.items[0]);
+  }
+  if (id.startsWith('UC') && id.length > 20) return getChannelById(id);
+  // Try as search
+  const results = await searchChannels(id, 1);
+  if (!results.length) throw new Error('Channel not found');
+  return results[0];
+}
+
+async function getChannelVideos(channelId, maxResults = 8) {
+  try {
+    const search = await ytFetch('/search', {
+      part: 'snippet', channelId, type: 'video',
+      maxResults, order: 'viewCount'
+    });
+    const vids = search.items || [];
+    if (!vids.length) return [];
+    const ids = vids.map(v => v.id.videoId).join(',');
+    const stats = await ytFetch('/videos', { part: 'statistics,snippet', id: ids });
+    return (stats.items || []).map(v => ({
+      id: v.id,
+      title: v.snippet.title,
+      thumb: v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url,
+      views: parseInt(v.statistics.viewCount || 0),
+      likes: parseInt(v.statistics.likeCount || 0),
+      comments: parseInt(v.statistics.commentCount || 0),
+      viewsFmt: fmtNum(parseInt(v.statistics.viewCount || 0)),
+      published: v.snippet.publishedAt
+    }));
+  } catch { return []; }
+}
+
+async function getRecentVideos(channelId, maxResults = 8) {
+  try {
+    const search = await ytFetch('/search', {
+      part: 'snippet', channelId, type: 'video',
+      maxResults, order: 'date'
+    });
+    const vids = search.items || [];
+    if (!vids.length) return [];
+    const ids = vids.map(v => v.id.videoId).join(',');
+    const stats = await ytFetch('/videos', { part: 'statistics,snippet', id: ids });
+    return (stats.items || []).map(v => ({
+      id: v.id,
+      title: v.snippet.title,
+      thumb: v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url,
+      views: parseInt(v.statistics.viewCount || 0),
+      likes: parseInt(v.statistics.likeCount || 0),
+      comments: parseInt(v.statistics.commentCount || 0),
+      viewsFmt: fmtNum(parseInt(v.statistics.viewCount || 0)),
+      published: v.snippet.publishedAt
+    }));
+  } catch { return []; }
+}
+
+function estimateMonthlyRevenue(totalViews, videoCount, daysSince, niche = 'general') {
+  const rpm = niche === 'general' ? 4 : 8;
+  const viewsPerMonth = daysSince > 0 ? (totalViews / daysSince) * 30 : 0;
+  const months = [];
+  for (let i = 11; i >= 0; i--) {
+    const factor = 0.6 + Math.random() * 0.8;
+    const mv = viewsPerMonth * factor;
+    const rev = (mv / 1000) * rpm;
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    months.push({ month: d.toLocaleString('fr', { month: 'short' }), revenue: Math.round(rev), views: Math.round(mv) });
+  }
+  return months;
+}
+
+async function expandChannel(idx) {
+  const ch = trackedChannels[idx];
+  if (!ch) return;
+  const detailEl = document.getElementById(`detail-${idx}`);
+  if (detailEl) { detailEl.remove(); return; }
+  // Remove other open details
+  document.querySelectorAll('.ch-detail').forEach(el => el.remove());
+  const parent = document.getElementById(`tracked-${idx}`);
+  if (!parent) return;
+  parent.insertAdjacentHTML('beforeend', `<div class="ch-detail" id="detail-${idx}"><div style="padding:30px;text-align:center"><div class="spinner"></div> Chargement des donnees...</div></div>`);
+
+  try {
+    const [topVids, recentVids] = await Promise.all([
+      getChannelVideos(ch.id, 8),
+      getRecentVideos(ch.id, 8)
+    ]);
+    const revenue = estimateMonthlyRevenue(ch.totalViews, ch.videoCount, ch.daysSince);
+    const maxRev = Math.max(...revenue.map(r => r.revenue), 1);
+    const totalEstRev = revenue.reduce((s, r) => s + r.revenue, 0);
+    const avgEngagement = topVids.length ? (topVids.reduce((s, v) => s + v.likes, 0) / topVids.reduce((s, v) => s + v.views, 0) * 100).toFixed(1) : '0';
+    const viewsPerVideo = ch.videoCount > 0 ? Math.round(ch.totalViews / ch.videoCount) : 0;
+    const uploadsPerMonth = ch.daysSince > 30 ? Math.round(ch.videoCount / (ch.daysSince / 30)) : ch.videoCount;
+
+    const html = `
+      <div class="ch-detail" id="detail-${idx}">
+        <div class="ch-detail-header" style="position:relative">
+          <button class="ch-detail-close" onclick="document.getElementById('detail-${idx}').remove()">✕</button>
+          <img class="ch-detail-avatar" src="${ch.avatar || ''}" alt="${ch.name}" onerror="this.style.background='${ch.color}';this.src=''">
+          <div class="ch-detail-info">
+            <h3>${ch.name}</h3>
+            <div style="font-size:13px;color:#94a3b8">${ch.subs} abonnes</div>
+            ${ch.desc ? `<div class="ch-desc">${ch.desc}</div>` : ''}
+            <div class="ch-meta">
+              <span>📅 Creee il y a ${Math.round(ch.daysSince / 365)} ans</span>
+              <span>🎬 ${ch.videoCount} videos</span>
+              <span>👁 ${fmtNum(ch.totalViews)} vues totales</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ch-detail-stats">
+          <div class="ch-detail-stat"><div class="val">${ch.subs}</div><div class="lbl">Abonnes</div></div>
+          <div class="ch-detail-stat"><div class="val">${fmtNum(ch.totalViews)}</div><div class="lbl">Vues Totales</div></div>
+          <div class="ch-detail-stat"><div class="val">${fmtNum(viewsPerVideo)}</div><div class="lbl">Vues/Video</div></div>
+          <div class="ch-detail-stat"><div class="val">${uploadsPerMonth}/mois</div><div class="lbl">Frequence</div></div>
+          <div class="ch-detail-stat"><div class="val">${avgEngagement}%</div><div class="lbl">Engagement</div></div>
+        </div>
+
+        <div class="ch-detail-section">
+          <h4>🔥 Top Videos (Plus de vues)</h4>
+          <div class="vid-grid">
+            ${topVids.map(v => `
+              <a class="vid-card" href="https://youtube.com/watch?v=${v.id}" target="_blank">
+                <img src="${v.thumb}" alt="${v.title}" loading="lazy">
+                <div class="vid-info">
+                  <div class="vid-title">${v.title}</div>
+                  <div class="vid-views">👁 ${v.viewsFmt} vues · ❤ ${fmtNum(v.likes)}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="ch-detail-section">
+          <h4>📅 Videos Recentes</h4>
+          <div class="vid-grid">
+            ${recentVids.map(v => `
+              <a class="vid-card" href="https://youtube.com/watch?v=${v.id}" target="_blank">
+                <img src="${v.thumb}" alt="${v.title}" loading="lazy">
+                <div class="vid-info">
+                  <div class="vid-title">${v.title}</div>
+                  <div class="vid-views">👁 ${v.viewsFmt} · ${v.published ? new Date(v.published).toLocaleDateString('fr') : ''}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="ch-detail-section">
+          <h4>💰 Revenus Estimes (12 derniers mois) <span class="growth-badge growth-up">~$${fmtNum(totalEstRev)}/an</span></h4>
+          <div class="rev-chart">
+            ${revenue.map(r => `
+              <div class="rev-bar" style="height:${Math.max((r.revenue / maxRev) * 100, 4)}%">
+                <span class="rev-val">$${r.revenue}</span>
+                <span class="rev-month">${r.month}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top:28px;font-size:11px;color:var(--gray);text-align:center">
+            Estimation basee sur RPM moyen $4/1000 vues. Les revenus reels varient selon la niche et la geo.
+          </div>
+        </div>
+
+        <div class="ch-detail-section" style="border-bottom:none;display:flex;gap:10px;flex-wrap:wrap">
+          <a href="${ch.url}" target="_blank" class="btn-search" style="font-size:12px;padding:8px 16px;text-decoration:none">🔗 Voir sur YouTube</a>
+          <a href="https://socialblade.com/youtube/channel/${ch.id}" target="_blank" class="btn-search" style="font-size:12px;padding:8px 16px;background:var(--green);text-decoration:none">📊 Social Blade</a>
+        </div>
+      </div>`;
+
+    document.getElementById(`detail-${idx}`)?.remove();
+    parent.insertAdjacentHTML('beforeend', html);
+  } catch(e) {
+    const d = document.getElementById(`detail-${idx}`);
+    if (d) d.innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Erreur: ${e.message}</div>`;
+  }
+}
+
+async function searchVideosForThumbnails(query, maxResults = 12) {
+  const search = await ytFetch('/search', {
+    part: 'snippet', type: 'video', q: query,
+    maxResults, order: 'viewCount'
+  });
+  const ids = (search.items || []).map(i => i.id.videoId).join(',');
+  if (!ids) return [];
+  const stats = await ytFetch('/videos', { part: 'statistics,snippet', id: ids });
+  return (stats.items || []).map(v => ({
+    id: v.id,
+    title: v.snippet.title,
+    channel: v.snippet.channelTitle,
+    thumb: v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.high?.url,
+    views: fmtNum(parseInt(v.statistics.viewCount || 0)),
+    likes: fmtNum(parseInt(v.statistics.likeCount || 0)),
+  }));
+}
+
+function buildChannelObj(ch) {
+  const subs = parseInt(ch.statistics.subscriberCount || 0);
+  const views = parseInt(ch.statistics.viewCount || 0);
+  const videos = parseInt(ch.statistics.videoCount || 1);
+  const avgViews = videos > 0 ? Math.round(views / videos) : 0;
+  const rawScore = subs > 0 ? (avgViews / subs) * 10 : 0;
+  const outlier = Math.round(rawScore * 10) / 10;
+  const created = ch.snippet.publishedAt ? new Date(ch.snippet.publishedAt) : null;
+  const daysSince = created ? Math.round((Date.now() - created) / 86400000) : 0;
+  const banner = ch.brandingSettings?.image?.bannerExternalUrl || '';
+  const country = ch.snippet?.country || '';
+  const keywords = ch.brandingSettings?.channel?.keywords || '';
+  return {
+    id: ch.id,
+    name: ch.snippet.title,
+    desc: ch.snippet.description?.substring(0, 200) || '',
+    avatar: ch.snippet.thumbnails?.medium?.url || ch.snippet.thumbnails?.default?.url,
+    banner,
+    country,
+    keywords,
+    subsNum: subs,
+    subs: fmtNum(subs),
+    avgViews,
+    avgViewsFmt: fmtNum(avgViews),
+    totalViews: views,
+    videoCount: videos,
+    daysSince,
+    outlier,
+    color: randomColor(ch.id),
+    url: `https://youtube.com/channel/${ch.id}`
+  };
+}
+
+function fmtNum(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toString();
+}
+
+const COLORS = ['#8b5cf6','#3b82f6','#10b981','#f59e0b','#ef4444','#6366f1','#ec4899','#14b8a6'];
+function randomColor(id) { return COLORS[id.charCodeAt(4) % COLORS.length]; }
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+const PAGES = {
+  dashboard: { label: 'Dashboard', icon: '🏠' },
+  'nf-overview': { label: 'Overview', icon: '🏠', parent: 'Niche Finder' },
+  'nf-ai': { label: 'AI Recommendations', icon: '✨', parent: 'Niche Finder' },
+  'nf-channels': { label: 'Channels', icon: '👤', parent: 'Niche Finder' },
+  'nf-thumbnails': { label: 'Thumbnail Search', icon: '🖼️', parent: 'Niche Finder' },
+  'nf-keywords': { label: 'Keywords', icon: '🔑', parent: 'Niche Finder' },
+  'nf-tracker': { label: 'Channel Tracker', icon: '📈', parent: 'Niche Finder' },
+  'nf-rpm': { label: 'RPM Predictor', icon: '💰', parent: 'Niche Finder' },
+  'nf-outliers': { label: 'Faceless Outliers', icon: '⚡', parent: 'Niche Finder' },
+  n8n: { label: 'N8N for YouTube', icon: '⚙️', badge: 'NEW', section: 'Tools' },
+  mcp: { label: 'MCP Server', icon: '🤖', badge: 'NEW', section: 'Tools' },
+  pricing: { label: 'Plans & Pricing', icon: '💎', section: 'Tools' },
+  account: { label: 'Account Settings' },
+  faq: { label: 'FAQ' },
+};
+
+const NF_PAGES = ['nf-overview','nf-ai','nf-channels','nf-thumbnails','nf-keywords','nf-tracker','nf-rpm','nf-outliers'];
+const MAIN_TOOLS = ['n8n','mcp','pricing'];
+
+function go(page) {
+  if (page === 'niche_finder') page = 'nf-overview';
+  PAGE = page;
+  buildSidebar();
+  setBread();
+  render();
+  window.scrollTo(0, 0);
+  if (PAGE === 'nf-overview') setTimeout(loadOverviewData, 200);
+  if (PAGE === 'nf-rpm') setTimeout(calcRPM, 200);
+}
+
+function buildSidebar() {
+  const nav = document.getElementById('sb-nav');
+  const inNF = NF_PAGES.includes(PAGE);
+  let h = '';
+  if (inNF) {
+    h += `<div class="sb-back" onclick="go('dashboard')">← Back to Dashboard</div>`;
+    h += `<div class="sb-section">Niche Finder</div>`;
+    NF_PAGES.forEach(p => {
+      h += `<div class="sb-item ${PAGE===p?'active':''}" onclick="go('${p}')">${PAGES[p].icon} ${PAGES[p].label}</div>`;
+    });
+  } else {
+    h += `<div class="sb-item ${PAGE==='dashboard'?'active':''}" onclick="go('dashboard')">🏠 Dashboard</div>`;
+    h += `<div class="sb-section">Tools</div>`;
+    h += `<div class="sb-item ${NF_PAGES.includes(PAGE)?'active':''}" onclick="go('niche_finder')">🔭 Niche Finder</div>`;
+    MAIN_TOOLS.forEach(p => {
+      h += `<div class="sb-item ${PAGE===p?'active':''}" onclick="go('${p}')">${PAGES[p].icon} ${PAGES[p].label} ${PAGES[p].badge?`<span class="sb-badge">${PAGES[p].badge}</span>`:''}</div>`;
+    });
+  }
+  nav.innerHTML = h;
+}
+
+function setBread() {
+  const p = PAGES[PAGE];
+  const el = document.getElementById('bread');
+  if (!p) { el.textContent = PAGE; return; }
+  el.innerHTML = p.parent ? `${p.parent} · <b>${p.label}</b>` : `<b>${p.label}</b>`;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function render() {
+  const c = document.getElementById('content');
+  switch(PAGE) {
+    case 'dashboard':   c.innerHTML = renderDashboard(); break;
+    case 'nf-overview': c.innerHTML = renderOverview(); break;
+    case 'nf-ai':       c.innerHTML = renderAI('AI Recommendations'); loadAI(); break;
+    case 'nf-channels': c.innerHTML = renderAI('Channels'); loadAI(); break;
+    case 'nf-outliers': c.innerHTML = renderAI('Faceless Outliers'); loadAI('faceless'); break;
+    case 'nf-keywords': c.innerHTML = renderKeywords(); break;
+    case 'nf-thumbnails': c.innerHTML = renderThumbnails(); break;
+    case 'nf-tracker':  c.innerHTML = renderTracker(); loadTrackedChannels(); break;
+    case 'nf-rpm':      c.innerHTML = renderRPM(); break;
+    case 'chrome_ext':  c.innerHTML = renderChromeExt(); break;
+    case 'course':      c.innerHTML = renderCourse(); break;
+    case 'n8n':         c.innerHTML = renderN8N(); break;
+    case 'mcp':         c.innerHTML = renderMCP(); break;
+    case 'account':     c.innerHTML = renderAccount(); break;
+    case 'pricing':     c.innerHTML = renderPricing(); break;
+    case 'faq':         c.innerHTML = renderFAQ(); break;
+    default: c.innerHTML = renderDashboard();
+  }
+}
+
+// ── API KEY BANNER ──────────────────────────────────────────────────────────
+function apiKeyBanner() {
+  if (YT_KEY) return `<div class="api-ok">✅ YouTube API connected — real data loading</div>`;
+  return `
+    <div class="api-banner">
+      <span style="font-size:18px">🔑</span>
+      <div style="flex:1">
+        <div style="font-weight:700;margin-bottom:2px">Enter your YouTube Data API v3 key</div>
+        <div style="font-size:12px;opacity:.8">Free at console.cloud.google.com · 10,000 queries/day · stored locally only</div>
+      </div>
+      <input id="yt-key-in" placeholder="AIza..." value="${YT_KEY}" style="max-width:280px" />
+      <button class="btn-save-key" onclick="saveKey()">Save Key</button>
+    </div>`;
+}
+
+function saveKey() {
+  const inp = document.getElementById('yt-key-in');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) { inp.style.border = '2px solid #ef4444'; inp.placeholder = 'Paste your API key here'; return; }
+  if (!v.startsWith('AIza')) { alert('⚠️ YouTube API keys start with "AIza..."'); return; }
+  YT_KEY = v;
+  localStorage.setItem('yt_api_key', v);
+  const btn = document.querySelector('.btn-save-key');
+  if (btn) { btn.textContent = '✅ Saved!'; btn.style.background = '#10B981'; btn.style.color = '#fff'; }
+  setTimeout(() => render(), 800);
+}
+
+// ── DASHBOARD ───────────────────────────────────────────────────────────────
+function renderDashboard() {
+  updateTopbarStatus();
+  return `
+    ${apiKeyBanner()}
+    <!-- HERO -->
+    <div style="background:linear-gradient(135deg,#0F172A 0%,#1E3A8A 50%,#4F46E5 100%);border-radius:20px;padding:32px 36px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 20px 40px rgba(79,70,229,.25)">
+      <div style="position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:rgba(255,255,255,.04);border-radius:50%"></div>
+      <div style="position:absolute;bottom:-40px;right:120px;width:160px;height:160px;background:rgba(16,185,129,.06);border-radius:50%"></div>
+      <div style="position:relative;z-index:1">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);margin-bottom:14px;backdrop-filter:blur(10px)">
+          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;animation:pulse 2s infinite"></span>
+          Live data from YouTube API
+        </div>
+        <h1 style="font-size:28px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-0.5px">Welcome back, Kateryna 👋</h1>
+        <p style="font-size:14px;color:rgba(255,255,255,.7);margin-bottom:20px;max-width:500px;line-height:1.6">Your YouTube intelligence dashboard. Find viral niches, spy on competitors, track outlier channels — all in one place.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button onclick="go('niche_finder')" style="background:#fff;color:#1E3A8A;border:none;padding:10px 22px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px"
+            onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            🔭 Start Research
+          </button>
+          <button onclick="go('nf-tracker')" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);padding:10px 22px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;backdrop-filter:blur(10px)">
+            📈 Track Channels
+          </button>
+          <button onclick="go('pricing')" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);padding:10px 22px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;backdrop-filter:blur(10px)">
+            💎 View Plans
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS TICKER -->
+    <div class="stats-ticker">
+      <div class="stat-box" style="--accent-color:#4F46E5">
+        <div class="stat-box-val" style="color:#4F46E5">18.7M</div>
+        <div class="stat-box-lbl">Channels Analyzed</div>
+        <div class="stat-box-delta up">↑ +133,220 today</div>
+      </div>
+      <div class="stat-box" style="--accent-color:#10B981">
+        <div class="stat-box-val" style="color:#10B981">4,891</div>
+        <div class="stat-box-lbl">Outliers Found</div>
+        <div class="stat-box-delta up">↑ +47 last 24h</div>
+      </div>
+      <div class="stat-box" style="--accent-color:#F59E0B">
+        <div class="stat-box-val" style="color:#F59E0B" id="tracked-count">${(JSON.parse(localStorage.getItem('tracked_channels')||'[]')).length}</div>
+        <div class="stat-box-lbl">Channels Tracked</div>
+        <div class="stat-box-delta" style="color:var(--gray)">→ <span style="cursor:pointer;color:var(--blue)" onclick="go('nf-tracker')">Add channels</span></div>
+      </div>
+      <div class="stat-box" style="--accent-color:#EF4444">
+        <div class="stat-box-val" style="color:#EF4444">$8–35</div>
+        <div class="stat-box-lbl">Avg RPM Range</div>
+        <div class="stat-box-delta" style="color:var(--gray)">→ <span style="cursor:pointer;color:var(--blue)" onclick="go('nf-rpm')">Predict yours</span></div>
+      </div>
+    </div>
+
+    <!-- PRODUCT CARDS -->
+    <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:var(--dark)">🚀 Your Tools</div>
+    <div class="dash-grid">
+      ${nichefinderCard()}
+      ${n8nDashCard()}
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 22px;font-size:13px;color:var(--gray);line-height:1.6;box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <span>Choose a plan that fits your workflow. All plans include a 7-day free trial.</span>
+      <button onclick="go('pricing')" class="btn-primary" style="font-size:12px;padding:8px 18px">Compare plans →</button>
+    </div>`;
+}
+
+function updateTopbarStatus() {
+  const el = document.getElementById('tb-api-status');
+  if (el) el.textContent = YT_KEY ? 'API Connected' : 'No API Key';
+  const el2 = document.getElementById('tb-api-status');
+  if (el2) el2.style.color = YT_KEY ? 'var(--green)' : 'var(--red)';
+}
+
+function checkItem(text) {
+  return `<li style="display:flex;gap:8px;margin-bottom:8px;font-size:15px;color:#374151;align-items:flex-start">
+    <span style="width:18px;height:18px;background:var(--blue);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+    <span><strong>${text.split(' — ')[0]}</strong>${text.includes(' — ') ? ' — ' + text.split(' — ')[1] : ''}</span>
+  </li>`;
+}
+
+function nichefinderCard() {
+  return `<div class="dash-card" onclick="go('niche_finder')">
+    <div style="background:#dbeafe;height:200px;overflow:hidden;position:relative;display:flex;align-items:flex-start;padding:12px;gap:6px;flex-direction:column">
+      ${[
+        {name:'Dr Insanity',subs:'897,000',views:'3,503,875',days:'418',uploads:'89'},
+        {name:'Unusual animation',subs:'14,200',views:'429,554',days:'96',uploads:'2'},
+        {name:'Blue paw print',subs:'28,400',views:'—',days:'—',uploads:'—'},
+      ].map(ch=>`
+        <div style="background:#fff;border-radius:8px;padding:8px 10px;width:100%;border:1px solid #e0e7ff;font-size:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:22px;height:22px;border-radius:50%;background:#3B4FE8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700">${ch.name.charAt(0)}</div>
+              <span style="font-weight:600;font-size:12px">${ch.name}</span>
+              <span style="font-size:11px;color:#6b7280">${ch.subs} subscribers</span>
+            </div>
+            <span style="background:#eef0fd;color:#3B4FE8;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px">✨ Picked by AI</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+            <div style="font-size:10px;color:#6b7280">👁 Avg views/video<br><strong style="font-size:12px;color:#111">${ch.views}</strong></div>
+            <div style="font-size:10px;color:#6b7280">📅 Days since start<br><strong style="font-size:12px;color:#111">${ch.days}</strong></div>
+            <div style="font-size:10px;color:#6b7280">⬆ Uploads<br><strong style="font-size:12px;color:#111">${ch.uploads}</strong></div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="dash-body">
+      <h3 style="font-size:17px;margin-bottom:6px">🔭 Niche Finder</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:12px">Discover the potential of any niche and get inspiration from successful channels.</p>
+      <ul style="list-style:none">
+        ${['See the potential of every niche — Track any data behind a short, long form or real time channel.','Study existing channels — Watch realtime views per channel and see what content is really performing.','Cut research time in half — Get winning niches hand delivered to one page, 24/7.','AI-powered niche recommendations — personalized to your goals and channel style.'].map(checkItem).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+function chromeExtCard() {
+  return `<div class="dash-card" onclick="go('chrome_ext')">
+    <div style="background:#d1fae5;height:200px;overflow:hidden;padding:10px;display:flex;flex-direction:column;gap:5px">
+      <div style="background:#fff;border-radius:8px;border:1px solid #e0e7ff;overflow:hidden">
+        <div style="background:#f3f4f6;padding:5px 10px;font-size:10px;font-weight:600;color:#6b7280;display:flex;gap:8px">
+          <span>Home</span><span>Videos</span><span>Shorts</span><span>Playlists</span><span style="color:#3B4FE8;border-bottom:2px solid #3B4FE8;padding-bottom:3px">Similar channels</span>
+        </div>
+        <div style="padding:8px 10px">
+          <div style="font-size:11px;font-weight:700;margin-bottom:6px">Similar channels</div>
+          ${[
+            {name:'neo',subs:'143k',score:'79%',views:'4,079,706',days:'3111'},
+            {name:'Fem',subs:'143k',score:'71%',views:'2,404,911',days:'1429'},
+          ].map(ch=>`
+            <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-top:1px solid #f0f0f0;font-size:10px">
+              <div style="width:20px;height:20px;border-radius:50%;background:#374151;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${ch.name.charAt(0).toUpperCase()}</div>
+              <div style="flex:1">
+                <div style="font-weight:600">${ch.name} <span style="color:#6b7280">${ch.subs}</span></div>
+                <div style="color:#6b7280">${ch.score} similarity</div>
+              </div>
+              <div style="color:#6b7280">👁 ${ch.views}</div>
+              <div style="color:#6b7280">📅 ${ch.days}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="dash-body">
+      <h3 style="font-size:17px;margin-bottom:6px">🌐 Chrome Extension</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:12px">A Chrome extension packed with features to help you do in-depth research on videos and channels while…</p>
+      <ul style="list-style:none">
+        ${['28+ growth focused features — Get access to the YouTube growth features no one else is giving you.','Turn YouTube into a creators lab — Research and analyze channels and videos without leaving the page.','Automate your workflow — Stay focused while your workflow runs automatically in the background.','Competitor analysis on the fly — See any channel\'s key metrics instantly while browsing.'].map(checkItem).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+function n8nDashCard() {
+  return `<div class="dash-card" onclick="go('n8n')">
+    <div style="background:#f0fdf4;height:200px;overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:8px">
+      ${[
+        {icon:'🔍',name:'Niche Research Autopilot'},
+        {icon:'📝',name:'Script Generator'},
+        {icon:'🎬',name:'Video Publishing Bot'},
+        {icon:'📊',name:'Analytics Tracker'},
+      ].map(w=>`
+        <div style="background:#fff;border-radius:8px;padding:8px 12px;border:1px solid #d1fae5;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600">
+          <span>${w.icon}</span><span>${w.name}</span>
+          <span style="margin-left:auto;background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px">Download →</span>
+        </div>`).join('')}
+    </div>
+    <div class="dash-body">
+      <h3 style="font-size:17px;margin-bottom:6px">⚙️ N8N for YouTube</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:12px">Pre-built automation workflows to grow your channel on autopilot.</p>
+      <ul style="list-style:none">
+        ${['Niche Research Autopilot — Auto-finds trending niches every morning','Script Generator — Turns any topic into full video script with hooks','Video Publishing Bot — Auto-uploads, titles, tags and schedules videos','Analytics Tracker — Daily stats delivered to Notion or Airtable'].map(checkItem).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+function courseCard() {
+  return `<div class="dash-card" onclick="go('course')">
+    <div style="background:#ede9fe;height:200px;overflow:hidden;padding:16px;display:flex;align-items:center;justify-content:center">
+      <div style="position:relative;width:100%">
+        <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,0.1);text-align:center">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">Your faceless video</div>
+          <div style="background:#1e3a8a;border-radius:6px;height:50px;display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+            <span style="color:#fff;font-size:20px">▶</span>
+          </div>
+          <div style="display:flex;justify-content:space-around;font-size:10px;color:#6b7280">
+            <div>📝 Script<br><span style="color:#3B4FE8">By freelancer</span></div>
+            <div>🎤 Voice<br><span style="color:#3B4FE8">By freelancer</span></div>
+            <div>🖼 Thumbnail<br><span style="color:#3B4FE8">By freelancer</span></div>
+            <div>✏️ Edit<br><span style="color:#3B4FE8">By freelancer</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:6px;font-size:11px;color:#6b7280">452K views · 1 week ago</div>
+      </div>
+    </div>
+    <div class="dash-body">
+      <h3 style="font-size:17px;margin-bottom:6px">▶️ YouTube Course</h3>
+      <p style="font-size:14px;color:var(--gray);margin-bottom:12px">100+ video lessons to learn everything you need to know about running a successful Faceless YouTube channel.</p>
+      <ul style="list-style:none">
+        ${['Proven format — Learn the system we\'re implementing real time into our own channels.','Comprehensive curriculum — Learn step-by-step about faceless YouTube content creation.','Accessible learning — For all levels of experience, beginner to advanced.','Community & support — Join 100,000+ creators growing with TubeSpy.'].map(checkItem).join('')}
+      </ul>
+    </div>
+  </div>`;
+}
+
+// ── OVERVIEW ────────────────────────────────────────────────────────────────
+function renderOverview() {
+  return `
+    ${apiKeyBanner()}
+    <div class="search-row">
+      <select class="search-sel" id="ov-type">
+        <option value="channel">Channel</option>
+        <option value="niche">Keyword/Niche</option>
+      </select>
+      <div class="search-wrap">
+        <span class="ico">🔍</span>
+        <input id="ov-q" placeholder="Search channels or niches..." onkeydown="if(event.key==='Enter')ovSearch()" />
+      </div>
+      <button class="btn-search" onclick="ovSearch()" id="ov-btn">🔍 Search</button>
+    </div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:4px">Welcome Kateryna!</div>
+    <div style="font-size:14px;color:var(--gray);margin-bottom:18px">Total Channels Analyzed: <strong>18,707,535</strong> <span class="tag-green">+133,220</span></div>
+    <div id="ov-results">
+      <div class="ov-section">
+        <div class="ov-head"><div><div class="ov-title">Recently Added Outlier Channels</div><div class="ov-sub">Live from YouTube</div></div><div class="view-all" onclick="go('nf-ai')">View All</div></div>
+        <div id="ov-outliers"><div class="loading"><div class="spinner"></div> Loading from YouTube...</div></div>
+      </div>
+      <div class="ov-section">
+        <div class="ov-head"><div><div class="ov-title">Trending Niches Right Now</div><div class="ov-sub">High view velocity</div></div><div class="view-all" onclick="go('nf-keywords')">View All</div></div>
+        <div id="ov-niches"><div class="loading"><div class="spinner"></div> Analyzing niches...</div></div>
+      </div>
+    </div>`;
+}
+
+async function loadOverviewData() {
+  if (!YT_KEY) return;
+  // Load trending outlier channels
+  try {
+    const channels = await searchChannels('faceless youtube channel', 6);
+    const sorted = channels.sort((a,b) => b.outlier - a.outlier);
+    const el = document.getElementById('ov-outliers');
+    if (!el) return;
+    el.innerHTML = sorted.map(ch => `
+      <div class="ov-row" onclick="go('nf-ai');setTimeout(()=>showChannelDetail('${ch.id}'),500)" style="cursor:pointer">
+        <div class="ov-av">${ch.avatar ? `<img src="${ch.avatar}">` : `<span style="font-size:16px">📺</span>`}</div>
+        <div style="flex:1">
+          <div class="ov-name">${ch.name}</div>
+          <div class="ov-subs">${ch.subs} subscribers</div>
+        </div>
+        <div class="ov-score">
+          ${scoreBarsMini(ch.outlier)}
+          <span>${ch.outlier.toFixed(1)}×</span>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    const el = document.getElementById('ov-outliers');
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+  // Load trending niches
+  const niches = ['Interior Design','Real Estate Investing','Meditation & Mindfulness','AI Tools','Personal Finance','Tiny House Living'];
+  try {
+    const results = await Promise.all(niches.slice(0,4).map(n => searchChannels(n, 3).then(chs => {
+      const avg = chs.length ? Math.round(chs.reduce((s,c)=>s+c.avgViews,0)/chs.length) : 0;
+      return { niche: n, avgViews: fmtNum(avg), channels: chs.length };
+    }).catch(() => ({ niche: n, avgViews: 'N/A', channels: 0 }))));
+    const el2 = document.getElementById('ov-niches');
+    if (!el2) return;
+    el2.innerHTML = results.map(n => `
+      <div class="ov-row" style="cursor:pointer" onclick="document.getElementById('kw-q')&&(go('nf-keywords'),setTimeout(()=>{document.getElementById('kw-q').value='${n.niche}';kwSearch()},500))">
+        <div class="ov-av"><span style="font-size:16px">📊</span></div>
+        <div style="flex:1"><div class="ov-name">${n.niche}</div><div class="ov-subs">${n.channels} channels found</div></div>
+        <div style="font-size:14px;color:var(--gray)">Avg views: <strong>${n.avgViews}</strong></div>
+      </div>`).join('');
+  } catch(e) {
+    const el2 = document.getElementById('ov-niches');
+    if (el2) el2.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+}
+
+async function ovSearch() {
+  if (!YT_KEY) { alert('Add your YouTube API key first'); return; }
+  const q = document.getElementById('ov-q')?.value?.trim();
+  if (!q) return;
+  const btn = document.getElementById('ov-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+  try {
+    const channels = await searchChannels(q, 8);
+    allResults = channels.sort((a,b) => b.outlier - a.outlier);
+    const el = document.getElementById('ov-results');
+    if (el) el.innerHTML = `
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">Results for "${q}" (${channels.length} channels)</div>
+      ${allResults.map(c => channelCard(c)).join('')}`;
+  } catch(e) {
+    const el = document.getElementById('ov-results');
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔍 Search'; }
+}
+
+// ── AI RECOMMENDATIONS ──────────────────────────────────────────────────────
+function renderAI(title = 'AI Recommendations') {
+  return `
+    ${apiKeyBanner()}
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="ico">🔍</span>
+        <input id="ai-q" placeholder="Search ${title.toLowerCase()} by keyword..." onkeydown="if(event.key==='Enter')aiSearch()" />
+      </div>
+      <button class="btn-search" id="ai-btn" onclick="aiSearch()">🔍 Search</button>
+    </div>
+    <div class="ftabs">
+      <div class="ftab active" onclick="setFilter(this,'all')">All Niches</div>
+      <div class="ftab" onclick="setFilter(this,'outliers')">High Outliers (2×+)</div>
+      <div class="ftab" onclick="setFilter(this,'new')">New Channels (&lt;180 days)</div>
+      <div class="ftab" onclick="setFilter(this,'high_views')">High Avg Views</div>
+    </div>
+    <div class="sort-row">
+      <button class="sort-btn active" id="sort-outlier" onclick="setSortBy('outlier')">⇅ Outlier Score</button>
+      <button class="sort-btn" id="sort-subs" onclick="setSortBy('subsNum')">⇅ Subscribers</button>
+      <button class="sort-btn" id="sort-views" onclick="setSortBy('avgViews')">⇅ Avg Views</button>
+      <button class="sort-btn" id="sort-days" onclick="setSortBy('daysSince')">⇅ Days Since Start</button>
+      <button class="sort-btn" id="sort-vids" onclick="setSortBy('videoCount')">⇅ Uploads</button>
+    </div>
+    <div id="ai-list"><div class="loading"><div class="spinner"></div> Loading channels from YouTube...</div></div>`;
+}
+
+const DEFAULT_QUERIES = {
+  ai: 'faceless youtube channel viral',
+  faceless: 'faceless youtube channel animation'
+};
+
+async function loadAI(mode = 'ai') {
+  if (!YT_KEY) {
+    const el = document.getElementById('ai-list');
+    if (el) el.innerHTML = `<div class="empty"><h3>API Key Required</h3><p>Add your YouTube API key above to load real channel data</p></div>`;
+    return;
+  }
+  try {
+    const channels = await searchChannels(DEFAULT_QUERIES[mode] || DEFAULT_QUERIES.ai, 10);
+    allResults = channels;
+    renderAIList();
+  } catch(e) {
+    const el = document.getElementById('ai-list');
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+}
+
+async function aiSearch() {
+  if (!YT_KEY) { alert('Add your YouTube API key first'); return; }
+  const q = document.getElementById('ai-q')?.value?.trim();
+  if (!q) return;
+  const btn = document.getElementById('ai-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+  const el = document.getElementById('ai-list');
+  if (el) el.innerHTML = `<div class="loading"><div class="spinner"></div> Searching YouTube for "${q}"...</div>`;
+  try {
+    allResults = await searchChannels(q, 12);
+    renderAIList();
+  } catch(e) {
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔍 Search'; }
+}
+
+function renderAIList() {
+  const el = document.getElementById('ai-list');
+  if (!el) return;
+  let results = [...allResults];
+  if (filterMode === 'outliers') results = results.filter(c => c.outlier >= 2);
+  else if (filterMode === 'new') results = results.filter(c => c.daysSince <= 180);
+  else if (filterMode === 'high_views') results = results.filter(c => c.avgViews >= 50000);
+  results.sort((a,b) => (b[sortBy] - a[sortBy]) * sortDir);
+  if (!results.length) {
+    el.innerHTML = `<div class="empty"><h3>No channels found</h3><p>Try a different search or filter</p></div>`;
+    return;
+  }
+  el.innerHTML = results.map(c => channelCard(c)).join('');
+}
+
+function setFilter(el, mode) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  filterMode = mode;
+  renderAIList();
+}
+
+function setSortBy(key) {
+  if (sortBy === key) { sortDir *= -1; } else { sortBy = key; sortDir = -1; }
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`sort-${key}`);
+  if (btn) btn.classList.add('active');
+  renderAIList();
+}
+
+// ── CHANNEL CARD ────────────────────────────────────────────────────────────
+function channelCard(c) {
+  const bars = scoreColor(c.outlier);
+  const filled = Math.min(4, Math.ceil(c.outlier / 2.5));
+  return `
+    <div class="ch-card" id="card-${c.id}">
+      <div class="ch-head">
+        <div class="ch-av" style="background:${c.color}">
+          ${c.avatar ? `<img src="${c.avatar}" onerror="this.style.display='none'">` : c.name.charAt(0)}
+        </div>
+        <div>
+          <div class="ch-name"><a href="${c.url}" target="_blank" style="color:var(--dark);text-decoration:none" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--dark)'">${c.name}</a></div>
+          <div class="ch-subs">${c.subs} subscribers</div>
+        </div>
+        <span class="ai-tag">✨ AI Pick</span>
+        <div class="ch-actions">
+          <div class="ico-btn" title="Open YouTube" onclick="window.open('${c.url}','_blank')">↗</div>
+          <div class="ico-btn" title="Expand videos" onclick="toggleVids('${c.id}',this)">▾</div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="met"><div class="met-lbl">👁 Avg Views/Video</div><div class="met-val">${c.avgViewsFmt}</div></div>
+        <div class="met"><div class="met-lbl">📅 Days Since Start</div><div class="met-val">${c.daysSince}</div></div>
+        <div class="met"><div class="met-lbl">⬆ Uploads</div><div class="met-val">${c.videoCount}</div></div>
+        <div class="met"><div class="met-lbl">⚡ Outlier Score</div>
+          <div class="outlier-wrap">
+            <div class="o-bars">${[0,1,2,3].map(i=>`<div class="o-bar ${i<filled?bars:''}"></div>`).join('')}</div>
+            <span class="o-num">${c.outlier.toFixed(1)}×</span>
+          </div>
+        </div>
+      </div>
+      <div class="ch-vids" id="vids-${c.id}">
+        <div class="vids-lbl">Top Videos <span style="color:var(--blue);cursor:pointer" onclick="window.open('${c.url}/videos','_blank')">→ View all</span></div>
+        <div class="vids-grid" id="vids-grid-${c.id}"><div class="loading"><div class="spinner"></div> Loading videos...</div></div>
+      </div>
+    </div>`;
+}
+
+function scoreColor(s) { return s >= 3 ? 'red' : s >= 1.5 ? 'orange' : 'green'; }
+
+function scoreBarsMini(s) {
+  const c = scoreColor(s);
+  const f = Math.min(4, Math.ceil(s/2.5));
+  return `<div class="o-bars">${[0,1,2,3].map(i=>`<div class="o-bar" style="width:16px;height:5px;${i<f?`background:${c==='red'?'var(--red)':c==='orange'?'var(--orange)':'var(--green)'}`:''}" ></div>`).join('')}</div>`;
+}
+
+async function toggleVids(id, btn) {
+  const el = document.getElementById(`vids-${id}`);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  btn.textContent = isOpen ? '▾' : '▴';
+  if (!isOpen) {
+    const grid = document.getElementById(`vids-grid-${id}`);
+    if (grid && grid.querySelector('.spinner')) {
+      try {
+        const vids = await getChannelVideos(id, 4);
+        if (!grid) return;
+        if (!vids.length) { grid.innerHTML = '<div style="font-size:13px;color:var(--gray)">No videos found</div>'; return; }
+        grid.innerHTML = vids.map(v => `
+          <div class="vid-item" onclick="window.open('https://youtube.com/watch?v=${v.id}','_blank')">
+            <img class="vid-thumb" src="${v.thumb}" onerror="this.style.background='#e5e7eb'" loading="lazy">
+            <div class="vid-title">${v.title}</div>
+            <div class="vid-views">${v.viewsFmt} views</div>
+          </div>`).join('');
+      } catch(e) {
+        if (grid) grid.innerHTML = `<div style="font-size:12px;color:var(--red)">${e.message}</div>`;
+      }
+    }
+  }
+}
+
+// ── KEYWORDS ────────────────────────────────────────────────────────────────
+function renderKeywords() {
+  return `
+    ${apiKeyBanner()}
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="ico">🔍</span>
+        <input id="kw-q" placeholder="Search by keyword (e.g. interior design, meditation)..." onkeydown="if(event.key==='Enter')kwSearch()" />
+      </div>
+      <button class="btn-search" id="kw-btn" onclick="kwSearch()">🔍 Analyze Keyword</button>
+    </div>
+    <div class="ftabs">
+      <div class="ftab active" onclick="setFilter(this,'all')">All</div>
+      <div class="ftab" onclick="setFilter(this,'outliers')">High Outliers</div>
+      <div class="ftab" onclick="setFilter(this,'high_views')">High Avg Views</div>
+    </div>
+    <div id="kw-list">
+      ${!YT_KEY ? `<div class="empty"><h3>API Key Required</h3><p>Add your YouTube API key to analyze keyword niches</p></div>` :
+        `<div class="empty"><h3>Enter a keyword above</h3><p>Type a niche topic and click Analyze to see channel data</p></div>`}
+    </div>`;
+}
+
+async function kwSearch() {
+  if (!YT_KEY) { alert('Add your YouTube API key first'); return; }
+  const q = document.getElementById('kw-q')?.value?.trim();
+  if (!q) return;
+  const btn = document.getElementById('kw-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Analyzing...'; }
+  const el = document.getElementById('kw-list');
+  if (el) el.innerHTML = `<div class="loading"><div class="spinner"></div> Fetching channels for "${q}"...</div>`;
+  try {
+    const channels = await searchChannels(q, 10);
+    allResults = channels;
+    if (!el) return;
+    if (!channels.length) { el.innerHTML = `<div class="empty"><h3>No channels found</h3><p>Try a different keyword</p></div>`; return; }
+    const avgViews = Math.round(channels.reduce((s,c)=>s+c.avgViews,0)/channels.length);
+    const avgSubs = Math.round(channels.reduce((s,c)=>s+c.subsNum,0)/channels.length);
+    const avgDays = Math.round(channels.reduce((s,c)=>s+c.daysSince,0)/channels.length);
+    const avgUploads = Math.round(channels.reduce((s,c)=>s+c.videoCount,0)/channels.length);
+    el.innerHTML = `
+      <div class="kw-card">
+        <div class="kw-title">
+          <span>📊 "${q}" — Niche Analysis (${channels.length} channels)</span>
+        </div>
+        <div class="kw-metrics">
+          <div class="met"><div class="met-lbl">👁 Avg Views/Video</div><div class="met-val">${fmtNum(avgViews)}</div></div>
+          <div class="met"><div class="met-lbl">👤 Avg Subscribers</div><div class="met-val">${fmtNum(avgSubs)}</div></div>
+          <div class="met"><div class="met-lbl">📅 Avg Days Active</div><div class="met-val">${avgDays}</div></div>
+          <div class="met"><div class="met-lbl">⬆ Avg Uploads</div><div class="met-val">${avgUploads}</div></div>
+        </div>
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px">Individual Channels</div>
+      ${channels.sort((a,b)=>b.outlier-a.outlier).map(c=>channelCard(c)).join('')}`;
+  } catch(e) {
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔍 Analyze Keyword'; }
+}
+
+// ── THUMBNAIL SEARCH ─────────────────────────────────────────────────────────
+function renderThumbnails() {
+  return `
+    ${apiKeyBanner()}
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="ico">🔍</span>
+        <input id="th-q" placeholder="Search thumbnails by topic (e.g. luxury interior design)..." onkeydown="if(event.key==='Enter')thSearch()" />
+      </div>
+      <button class="btn-search" id="th-btn" onclick="thSearch()">🔍 Search</button>
+    </div>
+    <div id="th-results">
+      ${!YT_KEY ? `<div class="empty"><h3>API Key Required</h3><p>Enter your YouTube API key to search thumbnails</p></div>` :
+        `<div class="empty"><h3>Search for thumbnails</h3><p>Enter a keyword to find trending video thumbnails</p></div>`}
+    </div>`;
+}
+
+async function thSearch() {
+  if (!YT_KEY) { alert('Add your YouTube API key first'); return; }
+  const q = document.getElementById('th-q')?.value?.trim();
+  if (!q) return;
+  const btn = document.getElementById('th-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+  const el = document.getElementById('th-results');
+  if (el) el.innerHTML = `<div class="loading"><div class="spinner"></div> Finding thumbnails...</div>`;
+  try {
+    const vids = await searchVideosForThumbnails(q, 12);
+    if (!el) return;
+    if (!vids.length) { el.innerHTML = `<div class="empty"><h3>No results</h3><p>Try a different keyword</p></div>`; return; }
+    el.innerHTML = `
+      <div style="font-size:15px;font-weight:700;margin-bottom:14px">${vids.length} thumbnails for "${q}"</div>
+      <div class="thumb-grid">${vids.map(v=>`
+        <div class="thumb-card" onclick="window.open('https://youtube.com/watch?v=${v.id}','_blank')">
+          <img src="${v.thumb}" alt="${v.title}" loading="lazy">
+          <div class="thumb-info">
+            <div class="thumb-title">${v.title}</div>
+            <div class="thumb-meta"><span>👁 ${v.views}</span><span>👤 ${v.channel}</span></div>
+          </div>
+        </div>`).join('')}</div>`;
+  } catch(e) {
+    if (el) el.innerHTML = `<div class="error-box">⚠️ ${e.message}</div>`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔍 Search'; }
+}
+
+// ── CHANNEL TRACKER ──────────────────────────────────────────────────────────
+function renderTracker() {
+  return `
+    ${apiKeyBanner()}
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px">Real-time Channel Tracker</div>
+    <div class="tracker-input-row">
+      <input class="tracker-input" id="track-in" placeholder="YouTube channel URL, @handle, or channel ID..." onkeydown="if(event.key==='Enter')addTracked()" />
+      <button class="btn-search" onclick="addTracked()" id="track-btn">+ Add Channel</button>
+    </div>
+    <div class="tracked-list" id="tracked-list">
+      <div class="loading"><div class="spinner"></div> Loading tracked channels...</div>
+    </div>`;
+}
+
+async function loadTrackedChannels() {
+  const el = document.getElementById('tracked-list');
+  if (!el) return;
+  if (!trackedChannels.length) {
+    el.innerHTML = `<div class="empty"><h3>No channels tracked yet</h3><p>Enter a YouTube channel URL or @handle above to start tracking</p></div>`;
+    return;
+  }
+  const viewsPerVideo = (ch) => ch.videoCount > 0 ? Math.round(ch.totalViews / ch.videoCount) : 0;
+  const uploadsMonth = (ch) => ch.daysSince > 30 ? Math.round(ch.videoCount / (ch.daysSince / 30)) : ch.videoCount;
+  const estRevYear = (ch) => {
+    const monthlyViews = ch.daysSince > 0 ? (ch.totalViews / ch.daysSince) * 30 : 0;
+    return Math.round((monthlyViews / 1000) * 4 * 12);
+  };
+
+  el.innerHTML = trackedChannels.map((ch, i) => `
+    <div class="tracked-item" id="tracked-${i}">
+      <div class="tracked-head" style="cursor:pointer" onclick="expandChannel(${i})">
+        <div class="ch-av" style="width:48px;height:48px;background:${ch.color || '#3b82f6'};border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;overflow:hidden">
+          ${ch.avatar ? `<img src="${ch.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : ch.name.charAt(0)}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:var(--dark)">${ch.name}</div>
+          <div style="font-size:12px;color:var(--gray)">${ch.subs} abonnes · ${ch.videoCount} videos · ${Math.round(ch.daysSince / 365)} ans</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--blue);font-weight:600;cursor:pointer">Voir detail ▼</span>
+          <button class="ico-btn" onclick="event.stopPropagation();refreshTracked(${i})" title="Refresh">🔄</button>
+          <button class="tracked-del" onclick="event.stopPropagation();removeTracked(${i})">×</button>
+        </div>
+      </div>
+      <div class="tracked-stats" style="grid-template-columns:repeat(5,1fr)">
+        <div class="tstat"><div class="tstat-lbl">👁 Vues/Video</div><div class="tstat-val">${ch.avgViewsFmt}</div></div>
+        <div class="tstat"><div class="tstat-lbl">📊 Vues Totales</div><div class="tstat-val">${fmtNum(ch.totalViews)}</div></div>
+        <div class="tstat"><div class="tstat-lbl">🎬 Videos</div><div class="tstat-val">${ch.videoCount}</div></div>
+        <div class="tstat"><div class="tstat-lbl">⚡ Outlier</div><div class="tstat-val">${ch.outlier.toFixed(1)}×</div></div>
+        <div class="tstat"><div class="tstat-lbl">💰 Est./an</div><div class="tstat-val">$${fmtNum(estRevYear(ch))}</div></div>
+      </div>
+    </div>`).join('');
+}
+
+async function addTracked() {
+  if (!YT_KEY) { alert('Add your YouTube API key first'); return; }
+  const input = document.getElementById('track-in')?.value?.trim();
+  if (!input) return;
+  const btn = document.getElementById('track-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+  try {
+    const ch = await getChannelByUrl(input);
+    if (trackedChannels.find(t => t.id === ch.id)) {
+      alert('Channel already tracked!');
+    } else {
+      trackedChannels.push(ch);
+      localStorage.setItem('tracked_channels', JSON.stringify(trackedChannels));
+      document.getElementById('track-in').value = '';
+      loadTrackedChannels();
+    }
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '+ Add Channel'; }
+}
+
+async function refreshTracked(i) {
+  if (!YT_KEY) return;
+  try {
+    const ch = await getChannelById(trackedChannels[i].id);
+    trackedChannels[i] = ch;
+    localStorage.setItem('tracked_channels', JSON.stringify(trackedChannels));
+    loadTrackedChannels();
+  } catch(e) { alert('Error refreshing: ' + e.message); }
+}
+
+function removeTracked(i) {
+  trackedChannels.splice(i, 1);
+  localStorage.setItem('tracked_channels', JSON.stringify(trackedChannels));
+  loadTrackedChannels();
+}
+
+// ── RPM PREDICTOR ────────────────────────────────────────────────────────────
+const RPM_DATA = [
+  {niche:'Personal Finance / Investing',rpm_low:12,rpm_high:35,tier:'high'},
+  {niche:'Real Estate',rpm_low:10,rpm_high:28,tier:'high'},
+  {niche:'Business / Entrepreneurship',rpm_low:8,rpm_high:25,tier:'high'},
+  {niche:'Technology / Software',rpm_low:6,rpm_high:20,tier:'high'},
+  {niche:'Digital Marketing',rpm_low:7,rpm_high:22,tier:'high'},
+  {niche:'Health & Fitness',rpm_low:4,rpm_high:14,tier:'mid'},
+  {niche:'Education / Tutorials',rpm_low:3,rpm_high:12,tier:'mid'},
+  {niche:'Interior Design / Architecture',rpm_low:3,rpm_high:10,tier:'mid'},
+  {niche:'Travel',rpm_low:2,rpm_high:8,tier:'mid'},
+  {niche:'Food & Cooking',rpm_low:2,rpm_high:7,tier:'mid'},
+  {niche:'Entertainment / Pop Culture',rpm_low:1,rpm_high:5,tier:'low'},
+  {niche:'Gaming',rpm_low:1,rpm_high:6,tier:'low'},
+  {niche:'Music',rpm_low:0.5,rpm_high:3,tier:'low'},
+  {niche:'Comedy / Memes',rpm_low:0.5,rpm_high:4,tier:'low'},
+];
+
+function renderRPM() {
+  return `
+    <div style="font-size:17px;font-weight:800;margin-bottom:4px">RPM Predictor</div>
+    <div style="font-size:14px;color:var(--gray);margin-bottom:20px">Estimate your YouTube revenue per 1000 views by niche</div>
+    <div class="rpm-calc">
+      <h3>📊 Calculate Your Estimated Revenue</h3>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label>Niche / Category</label>
+          <select id="rpm-niche" onchange="calcRPM()">
+            ${RPM_DATA.map(r=>`<option value="${r.niche}">${r.niche}</option>`).join('')}
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>Monthly Views</label>
+          <input id="rpm-views" type="number" value="10000" min="1" oninput="calcRPM()" placeholder="e.g. 50000" />
+        </div>
+        <div class="calc-field">
+          <label>Audience Location</label>
+          <select id="rpm-geo" onchange="calcRPM()">
+            <option value="1.3">USA / Canada / UK / AUS (1.3×)</option>
+            <option value="1.0">Europe (1.0×)</option>
+            <option value="0.5">Latin America (0.5×)</option>
+            <option value="0.3">South Asia (0.3×)</option>
+            <option value="0.2">Rest of World (0.2×)</option>
+          </select>
+        </div>
+      </div>
+      <div id="rpm-result" class="rpm-result">
+        <div class="rpm-result-val" id="rpm-val">$0</div>
+        <div class="rpm-result-lbl" id="rpm-lbl">Select options above to calculate</div>
+      </div>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin:20px 0 12px">RPM by Niche (USD per 1000 views)</div>
+    <div class="rpm-table">
+      <table>
+        <thead><tr><th>Niche</th><th>RPM Low</th><th>RPM High</th><th>Tier</th></tr></thead>
+        <tbody>${RPM_DATA.map(r=>`
+          <tr>
+            <td>${r.niche}</td>
+            <td class="${r.tier==='high'?'rpm-high':r.tier==='mid'?'rpm-mid':'rpm-low'}">$${r.rpm_low}</td>
+            <td class="${r.tier==='high'?'rpm-high':r.tier==='mid'?'rpm-mid':'rpm-low'}">$${r.rpm_high}</td>
+            <td><span class="${r.tier==='high'?'tag-green':'tag-blue'}">${r.tier.toUpperCase()}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function calcRPM() {
+  const nicheSel = document.getElementById('rpm-niche')?.value;
+  const views = parseInt(document.getElementById('rpm-views')?.value || 0);
+  const geo = parseFloat(document.getElementById('rpm-geo')?.value || 1);
+  const niche = RPM_DATA.find(r => r.niche === nicheSel);
+  if (!niche || !views) return;
+  const low = (niche.rpm_low * geo * views / 1000).toFixed(0);
+  const high = (niche.rpm_high * geo * views / 1000).toFixed(0);
+  const avgRPM = ((niche.rpm_low + niche.rpm_high) / 2 * geo).toFixed(1);
+  document.getElementById('rpm-val').textContent = `$${parseInt(low).toLocaleString()} – $${parseInt(high).toLocaleString()}`;
+  document.getElementById('rpm-lbl').textContent = `Estimated monthly revenue · Avg RPM: $${avgRPM} · Based on ${views.toLocaleString()} monthly views`;
+}
+
+// ── CHROME EXT ───────────────────────────────────────────────────────────────
+function renderChromeExt() {
+  return `
+    <div class="ext-hero">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Chrome Extension</div>
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">Automate Your YouTube Research</h2>
+        <p style="font-size:14px;color:var(--gray);margin-bottom:16px;line-height:1.6">28+ features directly while browsing YouTube — no tab switching needed. See stats, outlier scores, and keywords on any channel.</p>
+        <a href="https://chrome.google.com/webstore/search/youtube+niche+finder" target="_blank" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">🌐 Install Extension →</a>
+      </div>
+      <div style="font-size:72px">🌐</div>
+    </div>
+    <div class="ext-features">${[
+      ['📊','Similar Channels Panel','See competing channels on any YouTube page'],
+      ['⚡','Outlier Score Overlay','Instant score on every video you browse'],
+      ['🔑','Keyword Extractor','Top keywords from any video automatically'],
+      ['📈','Real-time Stats','View/sub/upload metrics without leaving YouTube'],
+      ['🔖','Save & Organize','One-click save channels to your lists'],
+      ['🤖','AI Summary','AI-powered niche summary on any channel'],
+    ].map(([i,n,d])=>`<div class="ext-feat"><h4>${i} ${n}</h4><p>${d}</p></div>`).join('')}</div>`;
+}
+
+// ── COURSE ───────────────────────────────────────────────────────────────────
+const MODULES = [
+  [1,'Introduction to Faceless YouTube','45 min'],
+  [2,'Finding Your Winning Niche','1h 20min'],
+  [3,'Channel Setup & Branding','55 min'],
+  [4,'Script Writing with AI','1h 10min'],
+  [5,'Voiceover & Video Production','2h 05min'],
+  [6,'Thumbnail Design Masterclass','1h 30min'],
+  [7,'SEO & Algorithm Hacks','1h 45min'],
+  [8,'Monetization Strategies','50 min'],
+  [9,'Scaling to 100K Subscribers','1h 15min'],
+  [10,'Automation Workflows with N8N','2h 20min'],
+];
+
+function renderCourse() {
+  return `
+    <div class="course-hero">
+      <div style="font-size:12px;font-weight:700;opacity:.7;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Faceless YouTube Course</div>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:8px">Learn Everything About Faceless Channels</h2>
+      <p style="font-size:14px;opacity:.85;margin-bottom:12px">100+ video lessons. Proven format used on real channels. Everything to go from 0 to monetization.</p>
+      <div style="display:flex;gap:16px;font-size:13px;opacity:.8"><span>📹 100+ lessons</span><span>⏱ 40+ hours</span><span>👤 100,000+ creators</span></div>
+    </div>
+    <div class="mod-list">${MODULES.map(([n,name,dur])=>`
+      <div class="mod-item">
+        <div class="mod-num">${n}</div>
+        <div class="mod-name">${name}</div>
+        <div class="mod-dur">${dur}</div>
+        <span style="color:var(--green);font-size:14px">▶</span>
+      </div>`).join('')}</div>`;
+}
+
+// ── N8N ──────────────────────────────────────────────────────────────────────
+const WORKFLOWS = [
+  ['🔍','Niche Research Autopilot','Auto-finds trending niches every morning and sends a report'],
+  ['📝','Script Generator','Turns any topic into full video script with hooks and CTAs'],
+  ['🎬','Video Publishing Bot','Auto-uploads, titles, tags and schedules your videos'],
+  ['📊','Analytics Tracker','Daily YouTube stats delivered to Notion or Airtable'],
+  ['💬','Comment Responder AI','Responds to top comments automatically with AI'],
+  ['🔔','Competitor Alert','Notifies when a competitor uploads — steal ideas fast'],
+];
+
+const WF_JSON_DATA = {
+  'Niche Research Autopilot': {"name":"Niche Research Autopilot","nodes":[{"id":"1","type":"n8n-nodes-base.scheduleTrigger","name":"Every 24h","parameters":{"rule":{"interval":[{"field":"hours","hoursInterval":24}]}},"position":[200,200]},{"id":"2","type":"n8n-nodes-base.httpRequest","name":"YouTube Search","parameters":{"url":"https://www.googleapis.com/youtube/v3/search","qs":{"q":"faceless youtube niche viral","type":"channel","part":"snippet","maxResults":"20","key":"{{$env.YOUTUBE_API_KEY}}"}},"position":[400,200]},{"id":"3","type":"n8n-nodes-base.gmail","name":"Send Report","parameters":{"operation":"send","to":"you@email.com","subject":"📊 Daily Niche Report","message":"={{JSON.stringify($json,null,2)}}"},"position":[600,200]}],"connections":{"1":{"main":[[{"node":"2","type":"main","index":0}]]},"2":{"main":[[{"node":"3","type":"main","index":0}]]}}},
+  'Script Generator': {"name":"Script Generator","nodes":[{"id":"1","type":"n8n-nodes-base.webhook","name":"Webhook","parameters":{"path":"generate-script","httpMethod":"POST"},"position":[200,200]},{"id":"2","type":"n8n-nodes-base.httpRequest","name":"OpenAI GPT-4","parameters":{"url":"https://api.openai.com/v1/chat/completions","method":"POST","headers":{"Authorization":"Bearer {{$env.OPENAI_API_KEY}}"},"body":{"model":"gpt-4","messages":[{"role":"system","content":"You are a YouTube script writer for faceless channels."},{"role":"user","content":"Write a 5-minute script about: ={{$json.topic}}"}]}},"position":[400,200]},{"id":"3","type":"n8n-nodes-base.respondToWebhook","name":"Return Script","parameters":{"responseBody":"={{$json.choices[0].message.content}}"},"position":[600,200]}],"connections":{"1":{"main":[[{"node":"2","type":"main","index":0}]]},"2":{"main":[[{"node":"3","type":"main","index":0}]]}}},
+  'Analytics Tracker': {"name":"Analytics Tracker","nodes":[{"id":"1","type":"n8n-nodes-base.scheduleTrigger","name":"Daily","parameters":{"rule":{"interval":[{"field":"days","daysInterval":1}]}},"position":[200,200]},{"id":"2","type":"n8n-nodes-base.httpRequest","name":"Get Stats","parameters":{"url":"https://www.googleapis.com/youtube/v3/channels","qs":{"part":"statistics","id":"YOUR_CHANNEL_ID","key":"{{$env.YOUTUBE_API_KEY}}"}},"position":[400,200]},{"id":"3","type":"n8n-nodes-base.notion","name":"Log to Notion","parameters":{"operation":"create","databaseId":"YOUR_DB_ID","properties":{"Views":{"number":"={{$json.items[0].statistics.viewCount}}"},"Subscribers":{"number":"={{$json.items[0].statistics.subscriberCount}}"},"Date":{"date":{"start":"={{new Date().toISOString()}}"}}}},"position":[600,200]}],"connections":{"1":{"main":[[{"node":"2","type":"main","index":0}]]},"2":{"main":[[{"node":"3","type":"main","index":0}]]}}},
+  'Competitor Alert': {"name":"Competitor Alert","nodes":[{"id":"1","type":"n8n-nodes-base.scheduleTrigger","name":"Every 12h","parameters":{"rule":{"interval":[{"field":"hours","hoursInterval":12}]}},"position":[200,200]},{"id":"2","type":"n8n-nodes-base.httpRequest","name":"Check Competitor","parameters":{"url":"https://www.googleapis.com/youtube/v3/activities","qs":{"part":"snippet,contentDetails","channelId":"COMPETITOR_CHANNEL_ID","maxResults":"5","key":"{{$env.YOUTUBE_API_KEY}}"}},"position":[400,200]},{"id":"3","type":"n8n-nodes-base.gmail","name":"Alert Email","parameters":{"operation":"send","to":"you@email.com","subject":"🔔 Competitor uploaded: ={{$json.items[0].snippet.title}}","message":"Watch it: https://youtube.com/watch?v={{$json.items[0].contentDetails.upload.videoId}}"},"position":[600,200]}],"connections":{"1":{"main":[[{"node":"2","type":"main","index":0}]]},"2":{"main":[[{"node":"3","type":"main","index":0}]]}}},
+};
+
+function downloadWorkflow(name) {
+  const data = WF_JSON_DATA[name] || {name,nodes:[],connections:{}};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name.replace(/\s+/g,'-').toLowerCase() + '.n8n.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderN8N() {
+  return `
+    <div style="background:linear-gradient(135deg,#0F172A,#1E3A8A);border-radius:16px;padding:28px;margin-bottom:20px;color:#fff;box-shadow:var(--shadow-xl);position:relative;overflow:hidden">
+      <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(79,70,229,.15);border-radius:50%;filter:blur(40px)"></div>
+      <div style="position:relative">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="background:rgba(16,185,129,.2);color:#10B981;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;border:1px solid rgba(16,185,129,.3)">NEW</span>
+          <span style="font-size:12px;color:rgba(255,255,255,.6)">Automation</span>
+        </div>
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:8px">N8N for YouTube</h2>
+        <p style="font-size:13px;opacity:.8;margin-bottom:18px;line-height:1.6;max-width:500px">Real N8N workflow files. Click Download → import JSON into N8N → add API keys → activate. Your channel runs on autopilot.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="https://n8n.io" target="_blank" style="background:#fff;color:#1E3A8A;border:none;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px">⚙️ Get N8N Free</a>
+          <a href="https://docs.n8n.io/workflows/import-export/" target="_blank" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:10px 20px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:6px">📖 How to Import</a>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px">Available Workflows</div>
+    <div class="wf-grid">${WORKFLOWS.map(([icon,name,desc])=>`
+      <div class="wf-card">
+        <div class="wf-icon">${icon}</div>
+        <div class="wf-name">${name}</div>
+        <div class="wf-desc">${desc}</div>
+        <button class="btn-dl" onclick="downloadWorkflow('${name.replace(/'/g,"\\'")}')">⬇ Download JSON</button>
+      </div>`).join('')}
+    </div>
+    <div style="background:var(--blue-light);border:1px solid rgba(79,70,229,.2);border-radius:12px;padding:14px 18px;margin-top:16px;font-size:13px;color:var(--dark);line-height:1.6">
+      <strong>How to use:</strong> 1. Download JSON &nbsp;→&nbsp; 2. Open N8N &nbsp;→&nbsp; 3. Menu → Import &nbsp;→&nbsp; 4. Replace <code style="background:rgba(79,70,229,.1);padding:1px 6px;border-radius:4px;font-size:12px">YOUR_API_KEY</code> &nbsp;→&nbsp; 5. Activate workflow.
+      <a href="https://docs.n8n.io" target="_blank" style="color:var(--blue);font-weight:600;margin-left:6px">Full docs →</a>
+    </div>`;
+}
+
+// ── MCP ──────────────────────────────────────────────────────────────────────
+function renderMCP() {
+  return `
+    <div class="mcp-hero">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="background:rgba(255,255,255,.2);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px">NEW</span></div>
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:8px">TubeSpy MCP</h2>
+      <p style="font-size:14px;opacity:.85;margin-bottom:12px">Use TubeSpy data directly inside Claude, Cursor, or any AI that supports MCP servers.</p>
+      <div class="mcp-code">{
+  "mcpServers": {
+    "tubespy": {
+      "command": "npx",
+      "args": ["-y", "tubespy-mcp"],
+      "env": { "YOUTUBE_API_KEY": "your_yt_api_key_here" }
+    }
+  }
+}</div>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:12px">Available Tools</div>
+    <div class="mcp-tools">${[
+      ['search_niches','Search profitable YouTube niches with AI analysis'],
+      ['get_channel_stats','Full stats for any YouTube channel ID'],
+      ['find_outliers','Channels overperforming in any niche'],
+      ['predict_rpm','Predict RPM for any YouTube niche'],
+      ['keyword_analysis','Analyze keyword competition and opportunity'],
+      ['track_channel','Add channel to tracker and monitor growth'],
+    ].map(([n,d])=>`<div class="mcp-tool"><h4>${n}</h4><p>${d}</p></div>`).join('')}</div>`;
+}
+
+// ── ACCOUNT ───────────────────────────────────────────────────────────────────
+function renderAccount() {
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h1 style="font-size:18px;font-weight:800">Account Settings</h1>
+      <button class="btn-primary" onclick="go('pricing')">View Plans →</button>
+    </div>
+    <div class="acct-tabs">
+      ${['profile','billing','invoices'].map(t=>`<div class="acct-tab ${acctTab===t?'active':''}" onclick="switchAcct('${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</div>`).join('')}
+    </div>
+    <div id="acct-content">${renderAcctContent()}</div>`;
+}
+
+function switchAcct(t) {
+  acctTab = t;
+  document.querySelectorAll('.acct-tab').forEach((el,i)=>el.classList.toggle('active',['profile','billing','invoices'][i]===t));
+  const el = document.getElementById('acct-content');
+  if (el) el.innerHTML = renderAcctContent();
+}
+
+function renderAcctContent() {
+  if (acctTab === 'profile') return `
+    <div class="profile-box">
+      <div class="p-av">K</div>
+      <div class="p-name">Kateryna Agostini</div>
+      <div class="p-since">Member since May 8, 2026</div>
+    </div>
+    <div class="detail-box">
+      <h3>👤 Personal Details</h3>
+      <div class="d-grid">
+        <div class="d-field"><label>First Name</label><div class="d-val">Kateryna</div></div>
+        <div class="d-field"><label>Last Name</label><div class="d-val">Agostini</div></div>
+        <div class="d-field"><label>Email Address</label><div class="d-val">kateryna.agostini@gmail.com</div></div>
+        <div class="d-field"><label>Your Access</label><div class="d-val"><span class="free-badge">Free Plan</span></div></div>
+      </div>
+    </div>
+    <div class="detail-box">
+      <h3>🔑 YouTube API Key</h3>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <input id="acct-key" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;outline:none" type="password" value="${YT_KEY}" placeholder="AIza..." />
+        <button class="btn-primary" onclick="saveKeyFromAcct()">Save</button>
+        ${YT_KEY ? `<button style="background:#fee2e2;color:#991b1b;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px" onclick="clearKey()">Clear</button>` : ''}
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-top:6px">Get your free key at <a href="https://console.cloud.google.com" target="_blank" style="color:var(--blue)">console.cloud.google.com</a> → Enable YouTube Data API v3 → Create API key</div>
+    </div>`;
+  if (acctTab === 'billing') return `
+    <div class="detail-box">
+      <h3>💳 Current Plan</h3>
+      <div style="background:var(--light);border-radius:10px;padding:20px;text-align:center;margin-bottom:16px">
+        <div style="font-size:24px;font-weight:800;margin-bottom:4px">FREE</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:14px">Limited access</div>
+        <button class="btn-primary">Upgrade to Pro →</button>
+      </div>
+      ${['Full Niche Finder','Unlimited AI Recommendations','Thumbnail Search','Channel Tracker','Faceless Outliers'].map(f=>`<div style="display:flex;gap:8px;padding:6px 0;font-size:14px"><span style="color:var(--green)">✓</span>${f}</div>`).join('')}
+    </div>`;
+  return `<div class="detail-box"><h3>🧾 Invoices</h3><div class="empty" style="padding:32px 0"><h3>No invoices yet</h3><p>Upgrade your plan to start</p></div></div>`;
+}
+
+function saveKeyFromAcct() {
+  const inp = document.getElementById('acct-key');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) { inp.style.border = '2px solid #ef4444'; return; }
+  if (!v.startsWith('AIza')) { alert('⚠️ YouTube API keys start with "AIza..."'); return; }
+  YT_KEY = v;
+  localStorage.setItem('yt_api_key', v);
+  alert('✅ API key saved!');
+  render();
+}
+function clearKey() {
+  YT_KEY = ''; localStorage.removeItem('yt_api_key');
+  alert('API key cleared'); render();
+}
+
+// ── PRICING ───────────────────────────────────────────────────────────────────
+function renderPricing() {
+  const plans = [
+    {
+      id: 'free', name: 'Free', price: '$0', period: 'forever',
+      color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB', badge: null,
+      cta: 'Current Plan', ctaStyle: 'background:#E5E7EB;color:#374151;cursor:default',
+      features: [
+        { ok: true,  text: 'YouTube Data API integration' },
+        { ok: true,  text: 'Keyword search (10/day)' },
+        { ok: true,  text: 'Channel cards with outlier score' },
+        { ok: true,  text: 'RPM Predictor (all niches)' },
+        { ok: true,  text: 'N8N workflow templates' },
+        { ok: false, text: 'AI Recommendations (unlimited)' },
+        { ok: false, text: 'Channel Tracker (max 3)' },
+        { ok: false, text: 'Thumbnail Search' },
+        { ok: false, text: 'Faceless Outliers feed' },
+        { ok: false, text: 'Export CSV / JSON' },
+        { ok: false, text: 'Priority support' },
+      ]
+    },
+    {
+      id: 'lite', name: 'Lite', price: '$19', period: '/month',
+      color: '#3B4FE8', bg: '#fff', border: '#3B4FE8', badge: null,
+      cta: 'Start Free Trial', ctaStyle: 'background:#3B4FE8;color:#fff',
+      features: [
+        { ok: true, text: 'Everything in Free' },
+        { ok: true, text: 'AI Recommendations (unlimited)' },
+        { ok: true, text: 'Channel Tracker (up to 20 channels)' },
+        { ok: true, text: 'Thumbnail Search (100/day)' },
+        { ok: true, text: 'Keyword search (unlimited)' },
+        { ok: true, text: 'Faceless Outliers feed' },
+        { ok: true, text: 'Export CSV' },
+        { ok: false, text: 'Export JSON / API access' },
+        { ok: false, text: 'White-label reports' },
+        { ok: false, text: 'Team seats (up to 3)' },
+        { ok: false, text: 'Dedicated account manager' },
+      ]
+    },
+    {
+      id: 'pro', name: 'Pro', price: '$49', period: '/month',
+      color: '#7c3aed', bg: 'linear-gradient(135deg,#1e3a8a,#3B4FE8)', border: '#3B4FE8', badge: 'MOST POPULAR',
+      cta: 'Get Pro Now', ctaStyle: 'background:#fff;color:#1e3a8a',
+      textColor: '#fff',
+      features: [
+        { ok: true, text: 'Everything in Lite' },
+        { ok: true, text: 'Unlimited channel tracking' },
+        { ok: true, text: 'Export CSV + JSON + API access' },
+        { ok: true, text: 'White-label PDF reports' },
+        { ok: true, text: 'Team seats (up to 3 users)' },
+        { ok: true, text: 'MCP server integration (Claude/Cursor)' },
+        { ok: true, text: 'Advanced outlier filters' },
+        { ok: true, text: 'Bulk keyword analysis' },
+        { ok: true, text: 'Email digest (daily/weekly)' },
+        { ok: false, text: 'Dedicated account manager' },
+        { ok: false, text: 'Custom integrations' },
+      ]
+    },
+    {
+      id: 'agency', name: 'Agency', price: '$149', period: '/month',
+      color: '#D97706', bg: '#fff', border: '#D97706', badge: null,
+      cta: 'Contact Sales', ctaStyle: 'background:#D97706;color:#fff',
+      features: [
+        { ok: true, text: 'Everything in Pro' },
+        { ok: true, text: 'Unlimited team seats' },
+        { ok: true, text: 'Dedicated account manager' },
+        { ok: true, text: 'Custom integrations & webhooks' },
+        { ok: true, text: 'White-label dashboard (your branding)' },
+        { ok: true, text: 'SLA uptime guarantee' },
+        { ok: true, text: 'Onboarding & training call' },
+        { ok: true, text: 'Early access to new features' },
+        { ok: true, text: 'Invoice billing available' },
+        { ok: true, text: 'Quarterly strategy review' },
+        { ok: true, text: 'Custom RPM data by niche + geo' },
+      ]
+    },
+  ];
+
+  const featureRows = [
+    { label: 'Keyword searches / day', vals: ['10', 'Unlimited', 'Unlimited', 'Unlimited'] },
+    { label: 'AI Recommendations', vals: ['✗', '✓', '✓', '✓'] },
+    { label: 'Channel Tracker', vals: ['—', '20 channels', 'Unlimited', 'Unlimited'] },
+    { label: 'Thumbnail Search', vals: ['✗', '100/day', 'Unlimited', 'Unlimited'] },
+    { label: 'Faceless Outliers', vals: ['✗', '✓', '✓', '✓'] },
+    { label: 'RPM Predictor', vals: ['✓', '✓', '✓', '✓'] },
+    { label: 'Export CSV', vals: ['✗', '✓', '✓', '✓'] },
+    { label: 'Export JSON / API', vals: ['✗', '✗', '✓', '✓'] },
+    { label: 'MCP Integration', vals: ['✗', '✗', '✓', '✓'] },
+    { label: 'White-label reports', vals: ['✗', '✗', '✓', '✓'] },
+    { label: 'Team seats', vals: ['1', '1', '3', 'Unlimited'] },
+    { label: 'Account manager', vals: ['✗', '✗', '✗', '✓'] },
+    { label: 'Custom integrations', vals: ['✗', '✗', '✗', '✓'] },
+  ];
+
+  return `
+    <div style="margin-bottom:24px">
+      <h1 style="font-size:1.4rem;font-weight:800;margin-bottom:6px">Plans & Pricing</h1>
+      <p style="font-size:0.85rem;color:var(--gray)">Everything you need to find winning YouTube niches and grow your channel.</p>
+    </div>
+
+    <!-- PLAN CARDS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px">
+      ${plans.map(p => {
+        const isGradient = p.bg.includes('gradient');
+        const tc = p.textColor || 'var(--dark)';
+        return `
+        <div style="border-radius:16px;border:2px solid ${p.border};background:${p.bg};padding:24px 20px;display:flex;flex-direction:column;position:relative;${isGradient?'color:#fff':''}">
+          ${p.badge ? `<div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#F97316;color:#fff;font-size:0.6rem;font-weight:800;padding:3px 12px;border-radius:99px;letter-spacing:.08em;white-space:nowrap">${p.badge}</div>` : ''}
+          <div style="font-size:0.9rem;font-weight:700;margin-bottom:6px;color:${isGradient?'rgba(255,255,255,.8)':p.color}">${p.name}</div>
+          <div style="font-size:2rem;font-weight:900;margin-bottom:2px">${p.price}<span style="font-size:0.75rem;font-weight:500;opacity:.7">${p.period}</span></div>
+          <div style="height:1px;background:${isGradient?'rgba(255,255,255,.2)':p.border};margin:14px 0"></div>
+          <ul style="list-style:none;flex:1;margin-bottom:18px">
+            ${p.features.map(f => `
+              <li style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:0.72rem;opacity:${f.ok?1:.45}">
+                <span style="flex-shrink:0;width:15px;height:15px;border-radius:50%;background:${f.ok?(isGradient?'rgba(255,255,255,.3)':p.color):'#ccc'};display:flex;align-items:center;justify-content:center;margin-top:1px">
+                  <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="${f.ok?'M1 3L3 5L7 1':'M2 2L6 6M6 2L2 6'}" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </span>
+                ${f.text}
+              </li>`).join('')}
+          </ul>
+          <button onclick="selectPlan('${p.id}')" style="width:100%;padding:10px;border-radius:8px;border:none;font-weight:700;font-size:0.75rem;cursor:pointer;transition:opacity .15s;${p.ctaStyle}"
+            onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">${p.cta}</button>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- FEATURE COMPARISON TABLE -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:32px">
+      <div style="padding:18px 24px;border-bottom:1px solid var(--border)">
+        <div style="font-size:0.9rem;font-weight:800">Full feature comparison</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--light)">
+            <th style="padding:10px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--gray);width:38%">Feature</th>
+            ${['Free','Lite','Pro','Agency'].map(n=>`<th style="padding:10px 14px;text-align:center;font-size:0.72rem;font-weight:700;color:var(--dark)">${n}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${featureRows.map((row,i) => `
+            <tr style="${i%2===0?'':'background:#fafafa'}">
+              <td style="padding:10px 20px;font-size:0.72rem;font-weight:500">${row.label}</td>
+              ${row.vals.map(v => `
+                <td style="padding:10px 14px;text-align:center;font-size:0.72rem;font-weight:600;color:${v==='✓'?'var(--green)':v==='✗'?'#D1D5DB':'var(--dark)'}">
+                  ${v === '✓' ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#dcfce7"/><path d="M5 8L7 10L11 6" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round"/></svg>'
+                    : v === '✗' ? '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#f3f4f6"/><path d="M6 6L10 10M10 6L6 10" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>'
+                    : v}
+                </td>`).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FAQ MINI -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">
+      <div style="font-size:0.9rem;font-weight:800;margin-bottom:16px">Common questions</div>
+      ${[
+        ['Can I cancel anytime?', 'Yes. Cancel from Account Settings any time. No lock-in, no penalties.'],
+        ['Is there a free trial?', 'Lite and Pro include a 7-day free trial. No credit card required to start.'],
+        ['What payment methods?', 'Credit card, PayPal, and invoice billing (Agency plan).'],
+        ['Can I upgrade or downgrade?', 'Yes, instantly. Prorated billing applies when upgrading mid-cycle.'],
+      ].map(([q,a]) => `
+        <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:0.75rem;font-weight:700;margin-bottom:4px">${q}</div>
+          <div style="font-size:0.72rem;color:var(--gray);line-height:1.5">${a}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- CHECKOUT MODAL ANCHOR -->
+    <div id="plan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center">
+        <div style="font-size:2rem;margin-bottom:12px">🚀</div>
+        <h2 style="font-size:1rem;font-weight:800;margin-bottom:8px" id="modal-title">Upgrade to Pro</h2>
+        <p style="font-size:0.78rem;color:var(--gray);margin-bottom:20px" id="modal-desc">Enter your email to start your 7-day free trial.</p>
+        <input id="modal-email" type="email" placeholder="you@example.com" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:0.82rem;margin-bottom:12px;outline:none" />
+        <button onclick="submitPlan()" style="width:100%;background:var(--blue);color:#fff;border:none;padding:12px;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer">Continue →</button>
+        <button onclick="closePlanModal()" style="margin-top:8px;background:none;border:none;font-size:0.75rem;color:var(--gray);cursor:pointer">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+let selectedPlan = '';
+function selectPlan(id) {
+  if (id === 'free') return;
+  selectedPlan = id;
+  const names = { lite: 'Lite — $19/mo', pro: 'Pro — $49/mo', agency: 'Agency — $149/mo' };
+  document.getElementById('modal-title').textContent = 'Upgrade to ' + names[id];
+  document.getElementById('modal-desc').textContent = id === 'agency'
+    ? 'Leave your email and our team will contact you within 24h.'
+    : 'Enter your email to start your 7-day free trial. No credit card required.';
+  const m = document.getElementById('plan-modal');
+  m.style.display = 'flex';
+}
+function closePlanModal() {
+  document.getElementById('plan-modal').style.display = 'none';
+}
+function submitPlan() {
+  const email = document.getElementById('modal-email').value.trim();
+  if (!email || !email.includes('@')) { alert('Enter a valid email'); return; }
+  closePlanModal();
+  alert(`✅ Thanks! We'll contact you at ${email} to activate your ${selectedPlan} plan.`);
+}
+
+// ── FAQ ──────────────────────────────────────────────────────────────────────
+const FAQS = [
+  ['What is TubeSpy?','TubeSpy is an AI-powered YouTube niche finder that helps faceless creators discover winning niches, analyze channels, and grow faster.'],
+  ['Do I need an API key?','Yes — this app uses the free YouTube Data API v3. You get 10,000 free units/day which is plenty for research. Get your key at console.cloud.google.com in under 2 minutes.'],
+  ['What is an Outlier Score?','The Outlier Score = (avgViewsPerVideo / subscribers) × 10. A score above 1 means the channel gets more views per video than it has subscribers — a strong signal of viral potential.'],
+  ['How do I track a channel?','Go to Channel Tracker, paste any YouTube URL (@handle, channel URL, or channel ID) and click Add Channel. Stats update in real time.'],
+  ['Is the RPM data accurate?','RPM estimates are based on industry benchmarks. Actual RPM varies by audience location, content quality, and season. Use ranges as guidance only.'],
+  ['Can I use this for free?','Yes! The YouTube Data API is free for 10,000 queries/day. This entire app is free, open source, and runs locally in your browser.'],
+];
+
+function renderFAQ() {
+  return `
+    <div style="max-width:720px">
+      <h1 style="font-size:18px;font-weight:800;margin-bottom:16px">Frequently Asked Questions</h1>
+      ${FAQS.map((f,i)=>`
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.nextElementSibling.classList.toggle('open')">
+            ${f[0]} <span>+</span>
+          </div>
+          <div class="faq-a">${f[1]}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── HELP TOGGLE ───────────────────────────────────────────────────────────────
+function toggleHelp() {
+  const d = document.getElementById('help-drop');
+  const c = document.getElementById('help-chev');
+  d.classList.toggle('open');
+  c.textContent = d.classList.contains('open') ? '▼' : '▲';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// go() is defined once above — call it here to boot
+go('dashboard');
+</script>
+</body>
+</html>
